@@ -1,41 +1,29 @@
-load('tablaImagenes.mat');
-numImagenes = size(tablaImagenes,1);
+function vector = extraer_caracteristicas(img, numBins)
+    R = img(:,:,1); G = img(:,:,2); B = img(:,:,3);
+    hsv = rgb2hsv(img);
+    H = hsv(:,:,1); V = hsv(:,:,3);
 
-numBins = 256;
-caracteristicasRGB = [];
+    hH = imhist(H, numBins)';
+    hV = imhist(V, numBins)';
+    hR = imhist(R, numBins)';
+    hG = imhist(G, numBins)';
+    hB = imhist(B, numBins)';
 
-for i = 1:numImagenes
-    if tablaImagenes(i,4) == "false"
-        rutaImagen = fullfile(tablaImagenes(i,2), tablaImagenes(i,1));
-        img = imread(rutaImagen);
-        img = im2double(img);
+    mR = mean(R(:));  sR = std(double(R(:))); skR = skewness(double(R(:))); kuR = kurtosis(double(R(:)));
+    mG = mean(G(:));  sG = std(double(G(:))); skG = skewness(double(G(:))); kuG = kurtosis(double(G(:)));
+    mB = mean(B(:));  sB = std(double(B(:))); skB = skewness(double(B(:))); kuB = kurtosis(double(B(:)));
+    mH = mean(H(:));  sH = std(H(:));         skH = skewness(H(:));         kuH = kurtosis(H(:));
+    mV = mean(V(:));  sV = std(V(:));         skV = skewness(V(:));         kuV = kurtosis(V(:));
 
-        R = img(:,:,1); G = img(:,:,2); B = img(:,:,3);
+    percH = max(hH) / sum(hH);
+    percV = max(hV) / sum(hV);
 
-        edges = linspace(0,1,numBins+1);
+    grayImg = rgb2gray(img);
+    contrast = std(double(grayImg(:)));
+    entGray = entropy(grayImg);
 
-        histR = histcounts(R, edges, 'Normalization', 'probability');
-        meanR = mean(R(:));
-        stdR = std(R(:));
-        skewR = skewness(R(:));
-
-        histG = histcounts(G, edges, 'Normalization', 'probability');
-        meanG = mean(G(:));
-        stdG = std(G(:));
-        skewG = skewness(G(:));
-
-        histB = histcounts(B, edges, 'Normalization', 'probability');
-        meanB = mean(B(:));
-        stdB = std(B(:));
-        skewB = skewness(B(:));
-
-        vector = [histR, meanR, stdR, skewR, ...
-                  histG, meanG, stdG, skewG, ...
-                  histB, meanB, stdB, skewB, ...
-                  str2double(tablaImagenes(i,3))];
-
-        caracteristicasRGB = [caracteristicasRGB; vector];
-    end
+    vector = [hH, hV, hR, hG, hB, ...
+              mR, sR, skR, kuR, mG, sG, skG, kuG, mB, sB, skB, kuB, ...
+              mH, sH, skH, kuH, mV, sV, skV, kuV, ...
+              percH, percV, contrast, entGray];
 end
-
-save('caracteristicasRGB.mat','caracteristicasRGB');

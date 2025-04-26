@@ -1,5 +1,5 @@
 clc; clearvars; close all;
-imagenes = dir('.\dataset\**\*.jpg');
+imagenes = dir('.\datasetSeries\**\*.jpg');
 numImagenes = numel(imagenes);
 
 keySet = {'barrufets','Bob esponja','gat i gos','Gumball', 'hora de aventuras', 'Oliver y Benji', 'padre de familia', 'pokemon', 'southpark', 'Tom y Jerry'};
@@ -20,4 +20,11 @@ for i = 1:numImagenes
     tablaImagenes = [tablaImagenes; fila];
 end
 
-save('tablaImagenes.mat','tablaImagenes');
+% Crear carpeta "out" 
+outFolder = 'out';
+if ~exist(outFolder, 'dir')
+    mkdir(outFolder);
+end
+
+% Guardar el archivo en la carpeta "out"
+save(fullfile(outFolder, 'tablaImagenes.mat'),'tablaImagenes');

@@ -1,4 +1,5 @@
-dataset/
+datasetPersonajes/
+datasetSeries/
 backup/
 *.asv
 *.mat
