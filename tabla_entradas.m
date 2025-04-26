@@ -1,23 +1,22 @@
-clc; clearvars; close all;
-imagenes = dir('.\datasetSeries\**\*.jpg');
-numImagenes = numel(imagenes);
+imagenes_S = dir('.\datasetSeries\**\*.jpg');
+numImagenes_S = numel(imagenes_S);
 
-keySet = {'barrufets','Bob esponja','gat i gos','Gumball', 'hora de aventuras', 'Oliver y Benji', 'padre de familia', 'pokemon', 'southpark', 'Tom y Jerry'};
-valueSet = 1:numel(keySet);
-mapaSeries = containers.Map(keySet, valueSet);
+keySet_S = {'barrufets','Bob esponja','gat i gos','Gumball', 'hora de aventuras', 'Oliver y Benji', 'padre de familia', 'pokemon', 'southpark', 'Tom y Jerry'};
+valueSet_S = 1:numel(keySet_S);
+mapaSeries_S = containers.Map(keySet_S, valueSet_S);
 
-tablaImagenes = [];
+tablaImagenes_S = [];
 porcentajeTest = 0.3;
 
-for i = 1:numImagenes
-    carpeta = imagenes(i).folder;
+for i = 1:numImagenes_S
+    carpeta = imagenes_S(i).folder;
     [~, nombreCarpeta] = fileparts(carpeta);
     esTest = rand() < porcentajeTest;
-    fila = [ string(imagenes(i).name), ...
-             string(imagenes(i).folder), ...
-             mapaSeries(nombreCarpeta), ...
+    fila = [ string(imagenes_S(i).name), ...
+             string(imagenes_S(i).folder), ...
+             mapaSeries_S(nombreCarpeta), ...
              esTest ];
-    tablaImagenes = [tablaImagenes; fila];
+    tablaImagenes_S = [tablaImagenes_S; fila];
 end
 
 % Crear carpeta "out" 
@@ -27,4 +26,4 @@ if ~exist(outFolder, 'dir')
 end
 
 % Guardar el archivo en la carpeta "out"
-save(fullfile(outFolder, 'tablaImagenes.mat'),'tablaImagenes');
+save(fullfile(outFolder, 'tablaImagenesSeries.mat'),'tablaImagenes_S');
