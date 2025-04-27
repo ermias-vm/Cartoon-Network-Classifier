@@ -42,7 +42,6 @@ Al ejecutar `classifier.m`, verás un menú con las siguientes opciones:
 
 2. **Identificar un PERSONAJE dada una imagen**  
    - Selecciona una imagen (aleatoria o manualmente) y el modelo predecirá qué personaje aparece.  
-   - _Nota: Solo disponible si tienes entrenado el modelo de personajes y las características correspondientes._
 
 3. **Test Detección de Series**  
    - Selecciona una carpeta de una serie y realiza un test automático sobre todas las imágenes de esa serie, mostrando el porcentaje de aciertos.
@@ -62,11 +61,9 @@ Al ejecutar `classifier.m`, verás un menú con las siguientes opciones:
     ├─ tablaImagenesSeries.mat
     ├─ tablaImagenesSeriesTest.mat
     ├─ caracteristicasSeries.mat
-    ├─ caracteristicas_norm_S.mat
     ├─ minXseries.mat
     ├─ maxXseries.mat
     ├─ caracteristicasPersonajes.mat
-    ├─ caracteristicas_norm_P.mat
     ├─ minXpersonajes.mat
     └─ maxXpersonajes.mat
     ```
