@@ -1,8 +1,16 @@
+modeloSeries = 'SeriesSVM957.mat';
+modeloPersonajes = 'PersonajesSVM.mat';
+numBins = 20;
+
 keySet_S = {'barrufets','Bob esponja','gat i gos','Gumball', ...
     'hora de aventuras','Oliver y Benji','padre de familia', ...
     'pokemon','southpark','Tom y Jerry'};
 seriesNames = keySet_S;
-personajeNames = {}; % Rellena cuando tengas los nombres de personajes
+personajeNames = {};
+
+% Cargar minXseries y maxXseries 
+minXseries = load(fullfile('out','minXseries.mat')); minXseries = minXseries.minXseries;
+maxXseries = load(fullfile('out','maxXseries.mat')); maxXseries = maxXseries.maxXseries;
 
 while true
     fprintf('\n¿Qué quieres hacer?\n');
@@ -24,7 +32,6 @@ while true
         fprintf('Tablas generadas correctamente.\n');
         continue;
     elseif opcion == 3
-        % Test Detección de Series por carpeta seleccionada
         fprintf('\nTest Detección de Series\n');
         fprintf('Selecciona la carpeta a testear:\n');
         for idxSerie = 1:numel(seriesNames)
@@ -36,8 +43,8 @@ while true
             continue;
         end
         carpeta = seriesNames{idxSeleccion};
-        modeloPath = fullfile('trainedModels', 'SeriesSVM965.mat');
-        modeloVar = 'SeriesSVM965';
+        modeloPath = fullfile('trainedModels', modeloSeries);
+        modeloVar = erase(modeloSeries, '.mat');
         nombres = seriesNames;
         datasetFolder = '.\datasetSeries';
         caracteristicasFile = fullfile('out', 'caracteristicasSeries.mat');
@@ -47,13 +54,11 @@ while true
         try
             datos = load(caracteristicasFile);
             caracteristicas_norm = datos.caracteristicas_norm_S;
+            minX = minXseries;
+            maxX = maxXseries;
         catch
             error('No se encuentra el archivo de características. Genera primero la tabla de características (opción 5).');
         end
-
-        Xnorm = caracteristicas_norm(:,1:end-1);
-        minX = min(Xnorm);
-        maxX = max(Xnorm);
 
         archivos = dir(fullfile(datasetFolder, carpeta, '*.jpg'));
         total = numel(archivos);
@@ -62,10 +67,17 @@ while true
         for j = 1:total
             imgPath = fullfile(archivos(j).folder, archivos(j).name);
             img = imread(imgPath);
-            numBins = 20;
             vector = extraer_caracteristicas(img, numBins);
             Xtest = (vector - minX) ./ (maxX - minX);
-            [yfit, ~] = modelo.predictFcn(Xtest);
+
+            % Compatibilidad con modelos que esperan tabla
+            if isfield(modelo, 'RequiredVariables')
+                predictorNames = modelo.RequiredVariables;
+                XtestTable = array2table(Xtest, 'VariableNames', predictorNames);
+                [yfit, ~] = modelo.predictFcn(XtestTable);
+            else
+                [yfit, ~] = modelo.predictFcn(Xtest);
+            end
 
             esCorrecto = (yfit == idxSeleccion);
             if esCorrecto
@@ -89,18 +101,22 @@ while true
 
     if opcion == 1
         fprintf('\nIdentificación de SERIE\n');
-        modeloPath = fullfile('trainedModels', 'SeriesSVM965.mat');
-        modeloVar = 'SeriesSVM965';
+        modeloPath = fullfile('trainedModels', modeloSeries);
+        modeloVar = erase(modeloSeries, '.mat');
         nombres = seriesNames;
         datasetFolder = '.\datasetSeries';
         caracteristicasFile = fullfile('out', 'caracteristicasSeries.mat');
+        minX = minXseries;
+        maxX = maxXseries;
     elseif opcion == 2
         fprintf('\nIdentificación de PERSONAJE\n');
-        modeloPath = fullfile('trainedModels', 'PersonajesSVM.mat');
+        modeloPath = fullfile('trainedModels', modeloPersonajes);
         modeloVar = 'trainedModelPersonajes'; 
         nombres = personajeNames;
         datasetFolder = '.\datasetPersonajes'; 
         caracteristicasFile = fullfile('out', 'caracteristicasPersonajes.mat'); % Cuando lo tengas
+        % minX y maxX para personajes si existen
+        % minX = ...; maxX = ...;
     end
 
     fprintf('1. Imagen aleatoria del dataset\n');
@@ -131,29 +147,31 @@ while true
     tmp = load(modeloPath);
     modelo = tmp.(modeloVar);
 
-    % Intentar cargar caracteristicas de series o personajes según corresponda
     try
         datos = load(caracteristicasFile); % caracteristicas_norm_S o caracteristicas_norm_P
         if opcion == 1
             caracteristicas_norm = datos.caracteristicas_norm_S;
+           
         else
             caracteristicas_norm = datos.caracteristicas_norm_P;
+    
         end
     catch
         error('No se encuentra el archivo de características. Genera primero la tabla de características (opción 5).');
     end
 
-    Xnorm = caracteristicas_norm(:,1:end-1);
-    minX = min(Xnorm);
-    maxX = max(Xnorm);
-
     img = imread(imgPath);
-    numBins = 20;
     vector = extraer_caracteristicas(img, numBins);
-
     Xtest = (vector - minX) ./ (maxX - minX);
 
-    [yfit, scores] = modelo.predictFcn(Xtest);
+    % Compatibilidad con modelos que esperan tabla
+    if isfield(modelo, 'RequiredVariables')
+        predictorNames = modelo.RequiredVariables;
+        XtestTable = array2table(Xtest, 'VariableNames', predictorNames);
+        [yfit, scores] = modelo.predictFcn(XtestTable);
+    else
+        [yfit, scores] = modelo.predictFcn(Xtest);
+    end
 
     if isempty(nombres)
         fprintf('Predicción: clase %d\n\n', yfit);
