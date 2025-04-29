@@ -1,3 +1,4 @@
+%% SERIES
 imagenes_S = dir('.\datasetSeries\**\*.jpg');
 numImagenes_S = numel(imagenes_S);
 
@@ -46,3 +47,54 @@ tablaTest_S = tablaImagenes_S(col4 == 1, :);
 % Guardar los archivos en la carpeta "out"
 save(fullfile(outFolder, 'tablaImagenesSeries.mat'),'tablaImagenes_S')
 save(fullfile(outFolder, 'tablaImagenesSeriesTest.mat'),'tablaTest_S')
+
+%% PERSONAJES
+
+imagenes_P = dir('.\datasetPersonajes\Implementados\**\*.jpg');
+numImagenes_P = numel(imagenes_P);
+
+keySet_P = {'Ash Ketchum','Bob esponja','Cartman','finn', ...
+    'gat i gos','gran barrufet','Gumball', ...
+    'Oliver','Peter Griffin','Tom'};
+valueSet_P = 1:numel(keySet_P);
+mapaSeries_P = containers.Map(keySet_P, valueSet_P);
+
+tablaImagenes_P = [];
+test_idx_P = false(numImagenes_P,1);
+
+% Asignar 0 (entrenamiento) a 7 de cada 10 imágenes, 1 (test) a las 3 siguientes
+for i = 1:numImagenes_P
+    carpeta = imagenes_P(i).folder;
+    [~, nombreCarpeta] = fileparts(carpeta);
+    idx10 = mod(i-1,10) + 1;
+    if idx10 <= 7
+        esTest = 0; % entrenamiento
+    else
+        esTest = 1; % test
+        test_idx_P(i) = true;
+    end
+    fila = [ string(imagenes_P(i).name), ...
+             string(imagenes_P(i).folder), ...
+             mapaSeries_P(nombreCarpeta), ...
+             esTest ];
+    tablaImagenes_P = [tablaImagenes_P; fila];
+end
+
+% Crear carpeta "out" 
+outFolder = 'out';
+if ~exist(outFolder, 'dir')
+    mkdir(outFolder);
+end
+
+% Calcular y mostrar el porcentaje de imágenes de entrenamiento (personajes)
+col4_P = cellfun(@str2double, cellstr(tablaImagenes_P(:,4)));
+numTrain_P = sum(col4_P == 0);
+porcTrain_P = 100 * numTrain_P / numImagenes_P;
+fprintf('Porcentaje de imágenes de entrenamiento (personajes): %.2f%% (%d de %d)\n', porcTrain_P, numTrain_P, numImagenes_P);
+
+% Generar tabla solo con las de test (personajes)
+tablaTest_P = tablaImagenes_P(col4_P == 1, :);
+
+% Guardar los archivos en la carpeta "out"
+save(fullfile(outFolder, 'tablaImagenesPersonajes.mat'),'tablaImagenes_P')
+save(fullfile(outFolder, 'tablaImagenesPersonajesTest.mat'),'tablaTest_P')

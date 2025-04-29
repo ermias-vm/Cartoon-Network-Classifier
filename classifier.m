@@ -1,16 +1,22 @@
 modeloSeries = 'SeriesSVM957.mat';
-modeloPersonajes = 'PersonajesSVM.mat';
+modeloPersonajes = 'PersonajesSVM969.mat';
 numBins = 20;
 
 keySet_S = {'barrufets','Bob esponja','gat i gos','Gumball', ...
     'hora de aventuras','Oliver y Benji','padre de familia', ...
     'pokemon','southpark','Tom y Jerry'};
 seriesNames = keySet_S;
-personajeNames = {};
+
+keySet_P = {'Ash Ketchum','Bob esponja','Cartman','finn', ...
+    'gat i gos','gran barrufet','Gumball', ...
+    'Oliver','Peter Griffin','Tom'};
+personajeNames = keySet_P;
 
 % Cargar minXseries y maxXseries 
 minXseries = load(fullfile('out','minXseries.mat')); minXseries = minXseries.minXseries;
 maxXseries = load(fullfile('out','maxXseries.mat')); maxXseries = maxXseries.maxXseries;
+minXpersonajes = load(fullfile('out','minXpersonajes.mat')); minXpersonajes = minXpersonajes.minXpersonajes;
+maxXpersonajes = load(fullfile('out','maxXpersonajes.mat')); maxXpersonajes = maxXpersonajes.maxXpersonajes;
 
 while true
     fprintf('\n¿Qué quieres hacer?\n');
@@ -92,7 +98,64 @@ while true
         fprintf('Aciertos: %d de %d (%.2f%%)\n\n', aciertos, total, porcentaje);
         continue;
     elseif opcion == 4
-        fprintf('\nTest Detección de Personajes: NO IMPLEMENTADO\n');
+        fprintf('\nTest Detección de Personajes\n');
+        fprintf('Selecciona la carpeta a testear:\n');
+        for idxPers = 1:numel(personajeNames)
+            fprintf('%d. %s\n', idxPers, personajeNames{idxPers});
+        end
+        idxSeleccion = input('Introduce el número de la carpeta: ');
+        if idxSeleccion < 1 || idxSeleccion > numel(personajeNames)
+            fprintf('Selección no válida.\n');
+            continue;
+        end
+        carpeta = personajeNames{idxSeleccion};
+        modeloPath = fullfile('trainedModels', modeloPersonajes);
+        modeloVar = erase(modeloPersonajes, '.mat');
+        nombres = personajeNames;
+        datasetFolder = '.\datasetPersonajes\Implementados';
+        caracteristicasFile = fullfile('out', 'caracteristicasPersonajes.mat');
+        minX = minXpersonajes;
+        maxX = maxXpersonajes;
+
+        tmp = load(modeloPath);
+        modelo = tmp.(modeloVar);
+
+        try
+            datos = load(caracteristicasFile);
+            caracteristicas_norm = datos.caracteristicas_norm_P;
+        catch
+            error('No se encuentra el archivo de características. Genera primero la tabla de características (opción 5).');
+        end
+
+        archivos = dir(fullfile(datasetFolder, carpeta, '*.jpg'));
+        total = numel(archivos);
+        aciertos = 0;
+
+        for j = 1:total
+            imgPath = fullfile(archivos(j).folder, archivos(j).name);
+            img = imread(imgPath);
+            vector = extraer_caracteristicas(img, numBins);
+            Xtest = (vector - minX) ./ (maxX - minX);
+
+            if isfield(modelo, 'RequiredVariables')
+                predictorNames = modelo.RequiredVariables;
+                XtestTable = array2table(Xtest, 'VariableNames', predictorNames);
+                [yfit, ~] = modelo.predictFcn(XtestTable);
+            else
+                [yfit, ~] = modelo.predictFcn(Xtest);
+            end
+
+            esCorrecto = (yfit == idxSeleccion);
+            if esCorrecto
+                aciertos = aciertos + 1;
+            end
+
+            fprintf('Progreso: %d/%d\n', j, total);
+        end
+
+        porcentaje = 100 * aciertos / total;
+        fprintf('\nResultados del test de detección de personajes para "%s":\n', carpeta);
+        fprintf('Aciertos: %d de %d (%.2f%%)\n\n', aciertos, total, porcentaje);
         continue;
     elseif opcion ~= 1 && opcion ~= 2
         fprintf('Opción no válida.\n');
@@ -111,12 +174,12 @@ while true
     elseif opcion == 2
         fprintf('\nIdentificación de PERSONAJE\n');
         modeloPath = fullfile('trainedModels', modeloPersonajes);
-        modeloVar = 'trainedModelPersonajes'; 
+        modeloVar = erase(modeloPersonajes, '.mat');
         nombres = personajeNames;
-        datasetFolder = '.\datasetPersonajes'; 
-        caracteristicasFile = fullfile('out', 'caracteristicasPersonajes.mat'); % Cuando lo tengas
-        % minX y maxX para personajes si existen
-        % minX = ...; maxX = ...;
+        datasetFolder = '.\datasetPersonajes\Implementados';
+        caracteristicasFile = fullfile('out', 'caracteristicasPersonajes.mat');
+        minX = minXpersonajes;
+        maxX = maxXpersonajes;
     end
 
     fprintf('1. Imagen aleatoria del dataset\n');
