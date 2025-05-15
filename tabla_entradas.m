@@ -8,8 +8,8 @@ keySet_S = {'barrufets','Bob esponja','gat i gos','Gumball', ...
 valueSet_S = 1:numel(keySet_S);
 mapaSeries_S = containers.Map(keySet_S, valueSet_S);
 
-tablaImagenes_S = [];
-test_idx = false(numImagenes_S,1);
+T_entradasSeries = [];
+test_idx_S = false(numImagenes_S,1);
 
 % Asignar 0 (entrenamiento) a 7 de cada 10 imágenes, 1 (test) a las 3 siguientes
 for i = 1:numImagenes_S
@@ -20,13 +20,13 @@ for i = 1:numImagenes_S
         esTest = 0; % entrenamiento
     else
         esTest = 1; % test
-        test_idx(i) = true;
+        test_idx_S(i) = true;
     end
     fila = [ string(imagenes_S(i).name), ...
              string(imagenes_S(i).folder), ...
              mapaSeries_S(nombreCarpeta), ...
              esTest ];
-    tablaImagenes_S = [tablaImagenes_S; fila];
+    T_entradasSeries = [T_entradasSeries; fila];
 end
 
 % Crear carpeta "out" 
@@ -36,20 +36,20 @@ if ~exist(outFolder, 'dir')
 end
 
 % Calcular y mostrar el porcentaje de imágenes de entrenamiento
-col4 = cellfun(@str2double, cellstr(tablaImagenes_S(:,4)));
+col4 = cellfun(@str2double, cellstr(T_entradasSeries(:,4)));
 numTrain = sum(col4 == 0);
 porcTrain = 100 * numTrain / numImagenes_S;
-fprintf('Porcentaje de imágenes de entrenamiento: %.2f%% (%d de %d)\n', porcTrain, numTrain, numImagenes_S);
+fprintf('Porcentaje de imágenes de entrenamiento (series): %.2f%% (%d de %d)\n', porcTrain, numTrain, numImagenes_S);
 
 % Generar tabla solo con las de test
-tablaTest_S = tablaImagenes_S(col4 == 1, :);
+T_entradasSeriesTest = T_entradasSeries(col4 == 1, :);
 
 % Guardar los archivos en la carpeta "out"
-save(fullfile(outFolder, 'tablaImagenesSeries.mat'),'tablaImagenes_S')
-save(fullfile(outFolder, 'tablaImagenesSeriesTest.mat'),'tablaTest_S')
+save(fullfile(outFolder, 'T_entradasSeries.mat'),'T_entradasSeries')
+save(fullfile(outFolder, 'T_entradasSeriesTest.mat'),'T_entradasSeriesTest')
 
 %% PERSONAJES
-
+%{
 imagenes_P = dir('.\datasetPersonajes\Implementados\**\*.jpg');
 numImagenes_P = numel(imagenes_P);
 
@@ -59,7 +59,7 @@ keySet_P = {'Ash Ketchum','Bob esponja','Cartman','finn', ...
 valueSet_P = 1:numel(keySet_P);
 mapaSeries_P = containers.Map(keySet_P, valueSet_P);
 
-tablaImagenes_P = [];
+T_entradasPersonajes = [];
 test_idx_P = false(numImagenes_P,1);
 
 % Asignar 0 (entrenamiento) a 7 de cada 10 imágenes, 1 (test) a las 3 siguientes
@@ -77,7 +77,7 @@ for i = 1:numImagenes_P
              string(imagenes_P(i).folder), ...
              mapaSeries_P(nombreCarpeta), ...
              esTest ];
-    tablaImagenes_P = [tablaImagenes_P; fila];
+    T_entradasPersonajes = [T_entradasPersonajes; fila];
 end
 
 % Crear carpeta "out" 
@@ -87,14 +87,15 @@ if ~exist(outFolder, 'dir')
 end
 
 % Calcular y mostrar el porcentaje de imágenes de entrenamiento (personajes)
-col4_P = cellfun(@str2double, cellstr(tablaImagenes_P(:,4)));
+col4_P = cellfun(@str2double, cellstr(T_entradasPersonajes(:,4)));
 numTrain_P = sum(col4_P == 0);
 porcTrain_P = 100 * numTrain_P / numImagenes_P;
 fprintf('Porcentaje de imágenes de entrenamiento (personajes): %.2f%% (%d de %d)\n', porcTrain_P, numTrain_P, numImagenes_P);
 
 % Generar tabla solo con las de test (personajes)
-tablaTest_P = tablaImagenes_P(col4_P == 1, :);
+T_entradasPersonajesTest = T_entradasPersonajes(col4_P == 1, :);
 
 % Guardar los archivos en la carpeta "out"
-save(fullfile(outFolder, 'tablaImagenesPersonajes.mat'),'tablaImagenes_P')
-save(fullfile(outFolder, 'tablaImagenesPersonajesTest.mat'),'tablaTest_P')
+save(fullfile(outFolder, 'T_entradasPersonajes.mat'),'T_entradasPersonajes')
+save(fullfile(outFolder, 'T_entradasPersonajesTest.mat'),'T_entradasPersonajesTest')
+%}

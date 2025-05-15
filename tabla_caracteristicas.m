@@ -1,53 +1,75 @@
 %% SERIES
-load(fullfile('out', 'tablaImagenesSeries.mat'));
-numImagenes_S = size(tablaImagenes_S,1);
+load(fullfile('out', 'T_entradasSeries.mat')); % Carga T_entradasSeries
+numImagenes_S = size(T_entradasSeries,1);
 
 numBins = 20;
-caracteristicas_S = [];
+T_caracteristicasSeries = [];
 
 for i = 1:numImagenes_S
-    if tablaImagenes_S(i,4) == "0"
-        img = imread(fullfile(tablaImagenes_S{i,2}, tablaImagenes_S{i,1}));
+    if T_entradasSeries(i,4) == "0"
+        img = imread(fullfile(T_entradasSeries{i,2}, T_entradasSeries{i,1}));
+        
+        % Extraer características y normalizar por número de píxeles
         vector = extraer_caracteristicas(img, numBins);
-        vector = [vector, str2double(tablaImagenes_S{i,3})];
-        caracteristicas_S = [caracteristicas_S; vector];
+        
+        % Obtener el número total de píxeles de la imagen
+        [alto, ancho, ~] = size(img);
+        numPixeles = alto * ancho;
+        
+        % Normalizar las características de color dividiéndolas por el número de píxeles
+        vector_normalizado = vector / numPixeles;
+        
+        % Añadir la etiqueta al final del vector
+        vector_normalizado = [vector_normalizado, str2double(T_entradasSeries{i,3})];
+        T_caracteristicasSeries = [T_caracteristicasSeries; vector_normalizado];
     end
-    % Imprimir progreso cada 50 imágenes o al final
-    if mod(i,10)==0 || i==numImagenes_S
+    % Imprimir progreso cada 100 imágenes o al final
+    if mod(i,100)==0 || i==numImagenes_S
         fprintf('Progreso: %.1f%% (%d/%d)\n', 100*i/numImagenes_S, i, numImagenes_S);
     end
 end
 
-% Normalización min-max de cada columna (excepto la etiqueta)
-X = caracteristicas_S(:,1:end-1);
-y = caracteristicas_S(:,end);
-minXseries = min(X);
-maxXseries = max(X);
-Xnorm = (X - minXseries) ./ (maxXseries - minXseries);
-caracteristicas_norm_S = [Xnorm, y];
+% Guardamos los datos originales normalizados por número de píxeles
+X = T_caracteristicasSeries(:,1:end-1);
+y = T_caracteristicasSeries(:,end);
+
+% Guardamos la tabla normalizada por número de píxeles
+T_caracteristicasSeriesNorm = T_caracteristicasSeries;
 
 % Crear carpeta "out"
 if ~exist('out','dir')
     mkdir('out')
 end
 
-save(fullfile('out','caracteristicasSeries.mat'),'caracteristicas_norm_S');
-save(fullfile('out','minXseries.mat'),'minXseries');
-save(fullfile('out','maxXseries.mat'),'maxXseries');
+% Guardamos la tabla normalizada
+save(fullfile('out','T_caracteristicasSeriesNorm.mat'),'T_caracteristicasSeriesNorm');
 
 %% PERSONAJES
-load(fullfile('out', 'tablaImagenesPersonajes.mat'));
-numImagenes_P = size(tablaImagenes_P,1);
+%{
+load(fullfile('out', 'T_entradasPersonajes.mat'));% Carga T_entradasPersonajes
+numImagenes_P = size(T_entradasPersonajes,1);
 
 numBins = 20;
-caracteristicas_P = [];
+T_caracteristicasPersonajes = [];
 
 for i = 1:numImagenes_P
-    if tablaImagenes_P(i,4) == "0"
-        img = imread(fullfile(tablaImagenes_P{i,2}, tablaImagenes_P{i,1}));
+    if T_entradasPersonajes(i,4) == "0"
+        img = imread(fullfile(T_entradasPersonajes{i,2}, T_entradasPersonajes{i,1}));
+        
+        % Extraer características y normalizar por número de píxeles
         vector = extraer_caracteristicas(img, numBins);
-        vector = [vector, str2double(tablaImagenes_P{i,3})];
-        caracteristicas_P = [caracteristicas_P; vector];
+        
+        % Obtener el número total de píxeles de la imagen
+        [alto, ancho, ~] = size(img);
+        numPixeles = alto * ancho;
+        
+        % Normalizar las características de color dividiéndolas por el número de píxeles
+        % Nota: Asumiendo que todas las características de vector son histogramas de color
+        vector_normalizado = vector / numPixeles;
+        
+        % Añadir la etiqueta al final del vector
+        vector_normalizado = [vector_normalizado, str2double(T_entradasPersonajes{i,3})];
+        T_caracteristicasPersonajes = [T_caracteristicasPersonajes; vector_normalizado];
     end
     % Imprimir progreso cada 10 imágenes o al final
     if mod(i,10)==0 || i==numImagenes_P
@@ -55,19 +77,18 @@ for i = 1:numImagenes_P
     end
 end
 
-% Normalización min-max de cada columna (excepto la etiqueta)
-X_P = caracteristicas_P(:,1:end-1);
-y_P = caracteristicas_P(:,end);
-minXpersonajes = min(X_P);
-maxXpersonajes = max(X_P);
-Xnorm_P = (X_P - minXpersonajes) ./ (maxXpersonajes - minXpersonajes);
-caracteristicas_norm_P = [Xnorm_P, y_P];
+% Guardamos los datos originales normalizados por número de píxeles
+X_P = T_caracteristicasPersonajes(:,1:end-1);
+y_P = T_caracteristicasPersonajes(:,end);
+
+% Guardamos la tabla normalizada por número de píxeles
+T_caracteristicasPersonajesNorm = T_caracteristicasPersonajes;
 
 % Crear carpeta "out" si no existe
 if ~exist('out','dir')
     mkdir('out')
 end
 
-save(fullfile('out','caracteristicasPersonajes.mat'),'caracteristicas_norm_P');
-save(fullfile('out','minXpersonajes.mat'),'minXpersonajes');
-save(fullfile('out','maxXpersonajes.mat'),'maxXpersonajes');
+% Guardamos la tabla normalizada
+save(fullfile('out','T_caracteristicasPersonajesNorm.mat'),'T_caracteristicasPersonajesNorm');
+%}

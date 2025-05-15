@@ -54,19 +54,16 @@ Al ejecutar `classifier.m`, verás un menú con las siguientes opciones:
 
 ### ⚠️ Importante
 
-- **La carpeta `out` debe contener los siguientes archivos generados automáticamente para el correcto funcionamiento del sistema:**
-
-    ```
+- **La carpeta `out` debe contener los siguientes archivos generados automáticamente para el correcto funcionamiento del sistema:**    ```
     out/
-    ├─ tablaImagenesSeries.mat
-    ├─ tablaImagenesSeriesTest.mat
-    ├─ caracteristicasSeries.mat
-    ├─ minXseries.mat
-    ├─ maxXseries.mat
-    ├─ caracteristicasPersonajes.mat
-    ├─ minXpersonajes.mat
-    └─ maxXpersonajes.mat
+    ├─ T_entradasSeries.mat
+    ├─ T_entradasSeriesTest.mat
+    ├─ T_caracteristicasSeriesNorm.mat
+    └─ T_caracteristicasPersonajesNorm.mat
     ```
+    
+    > 📝 **Nota sobre la normalización:**  
+    > Las características se normalizan dividiendo por el número de píxeles de cada imagen, lo que hace el sistema más robusto frente a imágenes de diferentes tamaños.
 
 > ⚠️ **Nota:**  
 > Si la carpeta `out` está vacía o se ha eliminado, ejecuta la opción de generación de tablas y características desde el menú principal para regenerar estos archivos.

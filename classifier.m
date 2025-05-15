@@ -12,11 +12,6 @@ keySet_P = {'Ash Ketchum','Bob esponja','Cartman','finn', ...
     'Oliver','Peter Griffin','Tom'};
 personajeNames = keySet_P;
 
-% Cargar minXseries y maxXseries 
-minXseries = load(fullfile('out','minXseries.mat')); minXseries = minXseries.minXseries;
-maxXseries = load(fullfile('out','maxXseries.mat')); maxXseries = maxXseries.maxXseries;
-minXpersonajes = load(fullfile('out','minXpersonajes.mat')); minXpersonajes = minXpersonajes.minXpersonajes;
-maxXpersonajes = load(fullfile('out','maxXpersonajes.mat')); maxXpersonajes = maxXpersonajes.maxXpersonajes;
 
 while true
     fprintf('\n¿Qué quieres hacer?\n');
@@ -48,20 +43,19 @@ while true
             fprintf('Selección no válida.\n');
             continue;
         end
+        
         carpeta = seriesNames{idxSeleccion};
         modeloPath = fullfile('trainedModels', modeloSeries);
         modeloVar = erase(modeloSeries, '.mat');
         nombres = seriesNames;
         datasetFolder = '.\datasetSeries';
-        caracteristicasFile = fullfile('out', 'caracteristicasSeries.mat');
+        caracteristicasFile = fullfile('out', 'T_caracteristicasSeriesNorm.mat');
         tmp = load(modeloPath);
         modelo = tmp.(modeloVar);
-
+        
         try
             datos = load(caracteristicasFile);
-            caracteristicas_norm = datos.caracteristicas_norm_S;
-            minX = minXseries;
-            maxX = maxXseries;
+            caracteristicas_norm = datos.T_caracteristicasSeriesNorm;
         catch
             error('No se encuentra el archivo de características. Genera primero la tabla de características (opción 5).');
         end
@@ -73,8 +67,12 @@ while true
         for j = 1:total
             imgPath = fullfile(archivos(j).folder, archivos(j).name);
             img = imread(imgPath);
+            
+            % Normalizar por número de píxeles
+            [alto, ancho, ~] = size(img);
+            numPixeles = alto * ancho;
             vector = extraer_caracteristicas(img, numBins);
-            Xtest = (vector - minX) ./ (maxX - minX);
+            Xtest = vector / numPixeles;
 
             % Compatibilidad con modelos que esperan tabla
             if isfield(modelo, 'RequiredVariables')
@@ -113,16 +111,14 @@ while true
         modeloVar = erase(modeloPersonajes, '.mat');
         nombres = personajeNames;
         datasetFolder = '.\datasetPersonajes\Implementados';
-        caracteristicasFile = fullfile('out', 'caracteristicasPersonajes.mat');
-        minX = minXpersonajes;
-        maxX = maxXpersonajes;
+        caracteristicasFile = fullfile('out', 'T_caracteristicasPersonajesNorm.mat');
 
         tmp = load(modeloPath);
         modelo = tmp.(modeloVar);
-
+        
         try
             datos = load(caracteristicasFile);
-            caracteristicas_norm = datos.caracteristicas_norm_P;
+            caracteristicas_norm = datos.T_caracteristicasPersonajesNorm;
         catch
             error('No se encuentra el archivo de características. Genera primero la tabla de características (opción 5).');
         end
@@ -134,8 +130,12 @@ while true
         for j = 1:total
             imgPath = fullfile(archivos(j).folder, archivos(j).name);
             img = imread(imgPath);
+            
+            % Normalizar por número de píxeles
+            [alto, ancho, ~] = size(img);
+            numPixeles = alto * ancho;
             vector = extraer_caracteristicas(img, numBins);
-            Xtest = (vector - minX) ./ (maxX - minX);
+            Xtest = vector / numPixeles;
 
             if isfield(modelo, 'RequiredVariables')
                 predictorNames = modelo.RequiredVariables;
@@ -168,18 +168,14 @@ while true
         modeloVar = erase(modeloSeries, '.mat');
         nombres = seriesNames;
         datasetFolder = '.\datasetSeries';
-        caracteristicasFile = fullfile('out', 'caracteristicasSeries.mat');
-        minX = minXseries;
-        maxX = maxXseries;
+        caracteristicasFile = fullfile('out', 'T_caracteristicasSeriesNorm.mat');
     elseif opcion == 2
         fprintf('\nIdentificación de PERSONAJE\n');
         modeloPath = fullfile('trainedModels', modeloPersonajes);
         modeloVar = erase(modeloPersonajes, '.mat');
         nombres = personajeNames;
         datasetFolder = '.\datasetPersonajes\Implementados';
-        caracteristicasFile = fullfile('out', 'caracteristicasPersonajes.mat');
-        minX = minXpersonajes;
-        maxX = maxXpersonajes;
+        caracteristicasFile = fullfile('out', 'T_caracteristicasPersonajesNorm.mat');
     end
 
     fprintf('1. Imagen aleatoria del dataset\n');
@@ -209,23 +205,25 @@ while true
 
     tmp = load(modeloPath);
     modelo = tmp.(modeloVar);
-
-    try
-        datos = load(caracteristicasFile); % caracteristicas_norm_S o caracteristicas_norm_P
-        if opcion == 1
-            caracteristicas_norm = datos.caracteristicas_norm_S;
-           
-        else
-            caracteristicas_norm = datos.caracteristicas_norm_P;
     
+    try
+        datos = load(caracteristicasFile);
+        if opcion == 1
+            caracteristicas_norm = datos.T_caracteristicasSeriesNorm;
+        else
+            caracteristicas_norm = datos.T_caracteristicasPersonajesNorm;
         end
     catch
         error('No se encuentra el archivo de características. Genera primero la tabla de características (opción 5).');
     end
 
     img = imread(imgPath);
+    
+    % Normalizar por número de píxeles
+    [alto, ancho, ~] = size(img);
+    numPixeles = alto * ancho;
     vector = extraer_caracteristicas(img, numBins);
-    Xtest = (vector - minX) ./ (maxX - minX);
+    Xtest = vector / numPixeles;
 
     % Compatibilidad con modelos que esperan tabla
     if isfield(modelo, 'RequiredVariables')
