@@ -2,3 +2,6 @@ datasetPersonajes/
 datasetSeries/
 backup/
 *.asv
+.vscode/
+ClassificationLearnerSessions/
+test/

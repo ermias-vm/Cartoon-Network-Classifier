@@ -1,5 +1,8 @@
+% Añadir la carpeta utils al path
+addpath(fullfile(pwd, 'utils'));
+
 %% SERIES
-load(fullfile('out', 'T_entradasSeries.mat')); % Carga T_entradasSeries
+load(fullfile('out', 'series', 'T_entradasSeries.mat')); % Carga T_entradasSeries
 numImagenes_S = size(T_entradasSeries,1);
 
 numBins = 20;
@@ -36,17 +39,20 @@ y = T_caracteristicasSeries(:,end);
 % Guardamos la tabla normalizada por número de píxeles
 T_caracteristicasSeriesNorm = T_caracteristicasSeries;
 
-% Crear carpeta "out"
+% Crear carpetas necesarias
 if ~exist('out','dir')
     mkdir('out')
 end
+if ~exist(fullfile('out','series'),'dir')
+    mkdir(fullfile('out','series'))
+end
 
-% Guardamos la tabla normalizada
-save(fullfile('out','T_caracteristicasSeriesNorm.mat'),'T_caracteristicasSeriesNorm');
+% Guardamos la tabla normalizada en la subcarpeta series
+save(fullfile('out','series','T_caracteristicasSeriesNorm.mat'),'T_caracteristicasSeriesNorm');
 
 %% PERSONAJES
 %{
-load(fullfile('out', 'T_entradasPersonajes.mat'));% Carga T_entradasPersonajes
+load(fullfile('out', 'personajes', 'T_entradasPersonajes.mat'));% Carga T_entradasPersonajes
 numImagenes_P = size(T_entradasPersonajes,1);
 
 numBins = 20;
@@ -84,11 +90,14 @@ y_P = T_caracteristicasPersonajes(:,end);
 % Guardamos la tabla normalizada por número de píxeles
 T_caracteristicasPersonajesNorm = T_caracteristicasPersonajes;
 
-% Crear carpeta "out" si no existe
+% Crear carpetas necesarias
 if ~exist('out','dir')
     mkdir('out')
 end
+if ~exist(fullfile('out','personajes'),'dir')
+    mkdir(fullfile('out','personajes'))
+end
 
-% Guardamos la tabla normalizada
-save(fullfile('out','T_caracteristicasPersonajesNorm.mat'),'T_caracteristicasPersonajesNorm');
+% Guardamos la tabla normalizada en la subcarpeta personajes
+save(fullfile('out','personajes','T_caracteristicasPersonajesNorm.mat'),'T_caracteristicasPersonajesNorm');
 %}

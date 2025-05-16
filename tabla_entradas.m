@@ -1,3 +1,6 @@
+% Añadir la carpeta utils al path
+addpath(fullfile(pwd, 'utils'));
+
 %% SERIES
 imagenes_S = dir('.\datasetSeries\**\*.jpg');
 numImagenes_S = numel(imagenes_S);
@@ -29,10 +32,14 @@ for i = 1:numImagenes_S
     T_entradasSeries = [T_entradasSeries; fila];
 end
 
-% Crear carpeta "out" 
+% Crear carpetas necesarias
 outFolder = 'out';
 if ~exist(outFolder, 'dir')
     mkdir(outFolder);
+end
+outFolderSeries = fullfile(outFolder, 'series');
+if ~exist(outFolderSeries, 'dir')
+    mkdir(outFolderSeries);
 end
 
 % Calcular y mostrar el porcentaje de imágenes de entrenamiento
@@ -44,9 +51,9 @@ fprintf('Porcentaje de imágenes de entrenamiento (series): %.2f%% (%d de %d)\n'
 % Generar tabla solo con las de test
 T_entradasSeriesTest = T_entradasSeries(col4 == 1, :);
 
-% Guardar los archivos en la carpeta "out"
-save(fullfile(outFolder, 'T_entradasSeries.mat'),'T_entradasSeries')
-save(fullfile(outFolder, 'T_entradasSeriesTest.mat'),'T_entradasSeriesTest')
+% Guardar los archivos en la subcarpeta "series"
+save(fullfile(outFolderSeries, 'T_entradasSeries.mat'),'T_entradasSeries')
+save(fullfile(outFolderSeries, 'T_entradasSeriesTest.mat'),'T_entradasSeriesTest')
 
 %% PERSONAJES
 %{
@@ -80,10 +87,14 @@ for i = 1:numImagenes_P
     T_entradasPersonajes = [T_entradasPersonajes; fila];
 end
 
-% Crear carpeta "out" 
+% Crear carpetas necesarias
 outFolder = 'out';
 if ~exist(outFolder, 'dir')
     mkdir(outFolder);
+end
+outFolderPersonajes = fullfile(outFolder, 'personajes');
+if ~exist(outFolderPersonajes, 'dir')
+    mkdir(outFolderPersonajes);
 end
 
 % Calcular y mostrar el porcentaje de imágenes de entrenamiento (personajes)
@@ -95,7 +106,7 @@ fprintf('Porcentaje de imágenes de entrenamiento (personajes): %.2f%% (%d de %d
 % Generar tabla solo con las de test (personajes)
 T_entradasPersonajesTest = T_entradasPersonajes(col4_P == 1, :);
 
-% Guardar los archivos en la carpeta "out"
-save(fullfile(outFolder, 'T_entradasPersonajes.mat'),'T_entradasPersonajes')
-save(fullfile(outFolder, 'T_entradasPersonajesTest.mat'),'T_entradasPersonajesTest')
+% Guardar los archivos en la subcarpeta "personajes"
+save(fullfile(outFolderPersonajes, 'T_entradasPersonajes.mat'),'T_entradasPersonajes')
+save(fullfile(outFolderPersonajes, 'T_entradasPersonajesTest.mat'),'T_entradasPersonajesTest')
 %}
