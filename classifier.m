@@ -17,28 +17,48 @@ if exist('copiarImagenesTest', 'file') ~= 2
 end
 
 % Verificar y crear estructura de carpetas
-% Carpeta principal test
-if ~exist('test', 'dir')
-    mkdir('test');
-    fprintf('Carpeta "test" creada correctamente.\n');
+% Carpeta principal dataset
+if ~exist('dataset', 'dir')
+    mkdir('dataset');
+    fprintf('Carpeta "dataset" creada correctamente.\n');
 end
 
-% Carpeta para series dentro de test
-if ~exist(fullfile('test', 'series'), 'dir')
-    mkdir(fullfile('test', 'series'));
-    fprintf('Carpeta "test/series" creada correctamente.\n');
+% Carpetas train y test
+if ~exist(fullfile('dataset', 'train'), 'dir')
+    mkdir(fullfile('dataset', 'train'));
+    fprintf('Carpeta "dataset/train" creada correctamente.\n');
 end
 
-% Carpeta para imágenes mal clasificadas
-if ~exist(fullfile('test', 'misclassified'), 'dir')
-    mkdir(fullfile('test', 'misclassified'));
-    fprintf('Carpeta "test/misclassified" creada correctamente.\n');
+if ~exist(fullfile('dataset', 'test'), 'dir')
+    mkdir(fullfile('dataset', 'test'));
+    fprintf('Carpeta "dataset/test" creada correctamente.\n');
 end
 
-% Carpeta para personajes
-if ~exist(fullfile('test', 'personajes'), 'dir')
-    mkdir(fullfile('test', 'personajes'));
-    fprintf('Carpeta "test/personajes" creada correctamente.\n');
+% Subcarpetas de train
+if ~exist(fullfile('dataset', 'train', 'series'), 'dir')
+    mkdir(fullfile('dataset', 'train', 'series'));
+    fprintf('Carpeta "dataset/train/series" creada correctamente.\n');
+end
+
+if ~exist(fullfile('dataset', 'train', 'personajes'), 'dir')
+    mkdir(fullfile('dataset', 'train', 'personajes'));
+    fprintf('Carpeta "dataset/train/personajes" creada correctamente.\n');
+end
+
+% Subcarpetas de test
+if ~exist(fullfile('dataset', 'test', 'series'), 'dir')
+    mkdir(fullfile('dataset', 'test', 'series'));
+    fprintf('Carpeta "dataset/test/series" creada correctamente.\n');
+end
+
+if ~exist(fullfile('dataset', 'test', 'misclassified'), 'dir')
+    mkdir(fullfile('dataset', 'test', 'misclassified'));
+    fprintf('Carpeta "dataset/test/misclassified" creada correctamente.\n');
+end
+
+if ~exist(fullfile('dataset', 'test', 'personajes'), 'dir')
+    mkdir(fullfile('dataset', 'test', 'personajes'));
+    fprintf('Carpeta "dataset/test/personajes" creada correctamente.\n');
 end
 
 % Carga el modelo de series
@@ -62,9 +82,27 @@ while true
     fprintf('\n¿Qué quieres hacer?\n\n');
     fprintf('   1. Identificar una SERIE\n');
     fprintf('   4. Preparar Carpetas de Test\n\n');
-    fprintf('   2. Salir\n');
-      % Input con manejo de errores
-    opcion = input('Selecciona opción (1, 2 o 4): ');
+    fprintf('   2. Salir\n');    % Input con manejo de errores
+    while true
+        try
+            userInput = input('Selecciona opción (1, 2 o 4): ', 's');
+            opcion = str2double(userInput);
+            
+            % Verificar si el input es un número válido (1, 2 o 4)
+            if isnan(opcion) || ~ismember(opcion, [1, 2, 4])
+                fprintf('\n%s\n', repmat('-', 1, 60));
+                fprintf('               Opción no válida.\n');
+                fprintf('       Por favor, selecciona 1, 2 o 4 únicamente.\n');
+                fprintf('%s\n', repmat('-', 1, 60));
+                continue;
+            end
+            break;
+        catch
+            fprintf('\n%s\n', repmat('-', 1, 60));
+            fprintf('       Error en la entrada. Inténtalo nuevamente.\n');
+            fprintf('%s\n', repmat('-', 1, 60));
+        end
+    end
     
     if opcion == 2
         fprintf('\n%s\n', repmat('-', 1, 60));
@@ -275,12 +313,10 @@ function procesarCarpetaSerie(carpetaPath, modelo, seriesNames, numBins, nombreC
         fprintf('\n%s\n', repmat('-', 1, 60));
         fprintf('          RESULTADOS PARA LA SERIE "%s"\n', nombreCarpeta);
         fprintf('%s\n', repmat('-', 1, 60));
-        fprintf('\n  Aciertos: %d de %d (%.2f%%)\n\n', aciertos, total, porcentaje);
-        
-        % Guardar tabla de imágenes mal clasificadas
+        fprintf('\n  Aciertos: %d de %d (%.2f%%)\n\n', aciertos, total, porcentaje);        % Guardar tabla de imágenes mal clasificadas
         if ~isempty(misclassifiedTable)
             % Crear nombre del archivo
-            nombreArchivo = fullfile('test', 'misclassified', [nombreCarpeta, '.mat']);
+            nombreArchivo = fullfile('dataset', 'test', 'misclassified', [nombreCarpeta, '.mat']);
             
             % Guardar la tabla
             T_misclassified = misclassifiedTable;
@@ -468,14 +504,12 @@ function procesarDatasetCompleto(datasetPath, modelo, seriesNames, numBins)
                 porcentaje = 100 * aciertos / total;
                 fprintf('  %-20s %10d %10d %10.2f%%\n', seriesNames{i}, aciertos, total, porcentaje);
             end
-        end
-        
-        % Guardar tabla de imágenes mal clasificadas
+        end        % Guardar tabla de imágenes mal clasificadas
         if ~isempty(misclassifiedTableGlobal)
             % Extraer el nombre de la carpeta principal
             [~, nombreCarpeta] = fileparts(datasetPath);
             % Crear nombre del archivo
-            nombreArchivo = fullfile('test', 'misclassified', [nombreCarpeta, '.mat']);
+            nombreArchivo = fullfile('dataset', 'test', 'misclassified', [nombreCarpeta, '.mat']);
             
             % Guardar la tabla
             T_misclassified = misclassifiedTableGlobal;
@@ -494,9 +528,17 @@ end
 
 %% Función para manejar la selección de imagen
 function seleccionarImagen(~, figHandle, modelo, seriesNames, numBins)
+    % Usar la carpeta dataset como ubicación inicial
+    rutaInicial = fullfile(pwd, 'dataset');
+    
+    % Verificar que la carpeta existe, sino usar pwd
+    if ~exist(rutaInicial, 'dir')
+        rutaInicial = pwd;
+    end
+    
     [file, path] = uigetfile({'*.jpg;*.jpeg;*.png', 'Imágenes (*.jpg, *.jpeg, *.png)'; ...
                              '*.*', 'Todos los archivos (*.*)'}, ...
-                            'Selecciona una imagen', pwd);
+                            'Selecciona una imagen', rutaInicial);
     
     % Si se seleccionó un archivo
     if ~isequal(file, 0)
@@ -512,7 +554,15 @@ end
 
 %% Función para manejar la selección de carpeta
 function seleccionarCarpeta(~, figHandle, modelo, seriesNames, numBins)
-    carpeta = uigetdir(pwd, 'Selecciona una carpeta');
+    % Usar la carpeta dataset como ubicación inicial
+    rutaInicial = fullfile(pwd, 'dataset');
+    
+    % Verificar si la carpeta existe, de lo contrario usar pwd
+    if ~exist(rutaInicial, 'dir')
+        rutaInicial = pwd;
+    end
+    
+    carpeta = uigetdir(rutaInicial, 'Selecciona una carpeta');
     
     % Si se seleccionó una carpeta
     if ~isequal(carpeta, 0)
@@ -556,6 +606,7 @@ function prepararCarpetasTest(seriesNames)
     if ~exist(datosPath, 'file')
         fprintf('\n%s\n', repmat('!', 1, 60));
         fprintf('  Error: No se encuentra el archivo %s\n', datosPath);
+        fprintf('  Asegúrate de ejecutar primero el script tabla_entradas.m para crear el archivo.\n');
         fprintf('%s\n', repmat('!', 1, 60));
         return;
     end
@@ -585,7 +636,7 @@ function prepararCarpetasTest(seriesNames)
         fprintf('%s\n', repmat('!', 1, 60));
         return;
     end      % Ruta base para las carpetas de test
-    rutaBaseTest = fullfile('test', 'series');
+    rutaBaseTest = fullfile('dataset', 'test', 'series');
     
     % Crear las carpetas de test
     carpetasCreadas = crearCarpetasTest(seriesNames, rutaBaseTest);

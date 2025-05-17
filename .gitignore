@@ -1,5 +1,4 @@
-datasetPersonajes/
-datasetSeries/
+dataset/
 backup/
 *.asv
 .vscode/

@@ -2,7 +2,7 @@
 addpath(fullfile(pwd, 'utils'));
 
 %% SERIES
-imagenes_S = dir('.\datasetSeries\**\*.jpg');
+imagenes_S = dir('.\dataset\train\series\**\*.jpg');
 numImagenes_S = numel(imagenes_S);
 
 keySet_S = {'barrufets','Bob esponja','gat i gos','Gumball', ...
@@ -33,7 +33,7 @@ for i = 1:numImagenes_S
 end
 
 % Crear carpetas necesarias
-outFolder = 'out';
+outFolder = fullfile('out');
 if ~exist(outFolder, 'dir')
     mkdir(outFolder);
 end
@@ -57,7 +57,7 @@ save(fullfile(outFolderSeries, 'T_entradasSeriesTest.mat'),'T_entradasSeriesTest
 
 %% PERSONAJES
 %{
-imagenes_P = dir('.\datasetPersonajes\Implementados\**\*.jpg');
+imagenes_P = dir('.\backup\datasetPersonajes\Implementados\**\*.jpg');
 numImagenes_P = numel(imagenes_P);
 
 keySet_P = {'Ash Ketchum','Bob esponja','Cartman','finn', ...
@@ -88,7 +88,7 @@ for i = 1:numImagenes_P
 end
 
 % Crear carpetas necesarias
-outFolder = 'out';
+outFolder = fullfile('out');
 if ~exist(outFolder, 'dir')
     mkdir(outFolder);
 end
