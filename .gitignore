@@ -4,3 +4,15 @@ backup/
 .vscode/
 ClassificationLearnerSessions/
 test/
+
+# Ignore specific files in out directory
+out/*
+out/personajes/*/T_entradas_*.mat
+out/series/T_entradas*.mat
+
+# Allow these specific files
+!out/personajes/
+!out/personajes/*/
+!out/personajes/*/T_caracteristicas_*.mat
+!out/series/
+!out/series/T_caracteristicas_*.mat
