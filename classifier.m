@@ -931,7 +931,7 @@ function procesarCarpetaPersonaje(carpetaPath, modeloSeries, seriesNames, person
     drawnow;
     
     % Contadores para cada serie y personaje
-    resultadosPorSerie = zeros(length(seriesNames), 3); % [detecciones_serie, detecciones_personaje, total]
+    resultadosPorSerie = zeros(length(seriesNames), 3); % [detecciones_serie, detecciones_personaje, total_serie]
     
     for j = 1:total
         imgPath = fullfile(archivos(j).folder, archivos(j).name);
@@ -943,8 +943,7 @@ function procesarCarpetaPersonaje(carpetaPath, modeloSeries, seriesNames, person
             numPixeles = alto * ancho;
             vector = extraer_caracteristicas(img, numBins);
             Xtest = vector / numPixeles;
-            
-            % Predecir la serie
+              % Predecir la serie
             if isfield(modeloSeries, 'RequiredVariables')
                 predictorNames = modeloSeries.RequiredVariables;
                 XtestTable = array2table(Xtest, 'VariableNames', predictorNames);
@@ -955,15 +954,13 @@ function procesarCarpetaPersonaje(carpetaPath, modeloSeries, seriesNames, person
             
             % Incrementar contador de detección de serie
             resultadosPorSerie(serieIdx, 1) = resultadosPorSerie(serieIdx, 1) + 1;
-            resultadosPorSerie(serieIdx, 3) = resultadosPorSerie(serieIdx, 3) + 1;
             
             % Obtener el personaje correspondiente a la serie
             personajeSerie = personajesNames{serieIdx};
             
             % Cargar el modelo del personaje
             modeloPersonajePath = fullfile('trainedModels', 'personajes', personajeSerie, ['trainedModel' personajeSerie '.mat']);
-            
-            % Verificar si existe el modelo del personaje
+              % Verificar si existe el modelo del personaje
             if exist(modeloPersonajePath, 'file')
                 % Cargar el modelo del personaje
                 tmp = load(modeloPersonajePath);
@@ -983,6 +980,12 @@ function procesarCarpetaPersonaje(carpetaPath, modeloSeries, seriesNames, person
                 if personajePresente == 1
                     resultadosPorSerie(serieIdx, 2) = resultadosPorSerie(serieIdx, 2) + 1;
                 end
+            else
+                % Si es la primera detección de esta serie, mostrar mensaje sobre modelo faltante
+                if j == 1 || (resultadosPorSerie(serieIdx, 1) == 1)
+                    fprintf('  Nota: No se encontró el modelo para el personaje %s\n', personajeSerie);
+                    fprintf('  Ruta esperada: %s\n', modeloPersonajePath);
+                end
             end
             
             % Actualizar barra de progreso
@@ -991,16 +994,15 @@ function procesarCarpetaPersonaje(carpetaPath, modeloSeries, seriesNames, person
             
             % Actualizar texto de progreso
             set(progressText, 'String', sprintf('Procesando: %d/%d (%.1f%%)', j, total, progressPct * 100));
-            
-            % Construir y actualizar tabla de resultados
+              % Construir y actualizar tabla de resultados
             tableStr = '';
             for i = 1:length(seriesNames)
-                if resultadosPorSerie(i, 3) > 0
-                    pctSerie = 100 * resultadosPorSerie(i, 1) / resultadosPorSerie(i, 3);
-                    pctPersonaje = 100 * resultadosPorSerie(i, 2) / resultadosPorSerie(i, 3);
+                if resultadosPorSerie(i, 1) > 0
+                    pctSerie = 100 * resultadosPorSerie(i, 1) / total;
+                    pctPersonaje = 100 * resultadosPorSerie(i, 2) / resultadosPorSerie(i, 1);
                     tableStr = [tableStr, sprintf('%s: %d/%d (%.1f%%) - %s: %d/%d (%.1f%%)\n', ...
-                        seriesNames{i}, resultadosPorSerie(i, 1), resultadosPorSerie(i, 3), pctSerie, ...
-                        personajesNames{i}, resultadosPorSerie(i, 2), resultadosPorSerie(i, 3), pctPersonaje)];
+                        seriesNames{i}, resultadosPorSerie(i, 1), total, pctSerie, ...
+                        personajesNames{i}, resultadosPorSerie(i, 2), resultadosPorSerie(i, 1), pctPersonaje)];
                 end
             end
             set(resultTable, 'String', tableStr);
@@ -1022,19 +1024,18 @@ function procesarCarpetaPersonaje(carpetaPath, modeloSeries, seriesNames, person
     fprintf('          RESULTADOS DE DETECCIÓN DE PERSONAJES\n');
     fprintf('%s\n', repmat('-', 1, 60));
     fprintf('\n  Total de imágenes procesadas: %d\n\n', total);
-    
-    % Tabla de resultados
+      % Tabla de resultados
     fprintf('  %-20s %-30s %-30s\n', 'SERIE', 'DETECCIÓN SERIE', 'DETECCIÓN PERSONAJE');
     fprintf('  %-20s %-30s %-30s\n', '-----------------', '--------------------', '----------------------');
     
     for i = 1:length(seriesNames)
-        if resultadosPorSerie(i, 3) > 0
-            pctSerie = 100 * resultadosPorSerie(i, 1) / resultadosPorSerie(i, 3);
-            pctPersonaje = 100 * resultadosPorSerie(i, 2) / resultadosPorSerie(i, 3);
+        if resultadosPorSerie(i, 1) > 0
+            pctSerie = 100 * resultadosPorSerie(i, 1) / total;
+            pctPersonaje = 100 * resultadosPorSerie(i, 2) / resultadosPorSerie(i, 1);
             
             fprintf('  %-20s %4d/%-6d (%6.2f%%) %15d/%-6d (%6.2f%%)\n', ...
-                seriesNames{i}, resultadosPorSerie(i, 1), resultadosPorSerie(i, 3), pctSerie, ...
-                resultadosPorSerie(i, 2), resultadosPorSerie(i, 3), pctPersonaje);
+                seriesNames{i}, resultadosPorSerie(i, 1), total, pctSerie, ...
+                resultadosPorSerie(i, 2), resultadosPorSerie(i, 1), pctPersonaje);
         end
     end
     
