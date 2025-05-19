@@ -6,60 +6,21 @@
 addpath(fullfile(pwd, 'utils'));
 disp(['Añadida carpeta utils: ', fullfile(pwd, 'utils')]);
 
-% Verificar que las funciones están disponibles
-if exist('copiarImagenesTest', 'file') ~= 2
-    warning('La función copiarImagenesTest no se encontró. Comprobando...');
-    dirUtils = dir(fullfile(pwd, 'utils', '*.m'));
-    disp('Funciones disponibles en utils:');
-    for i = 1:length(dirUtils)
-        disp(['  - ', dirUtils(i).name]);
-    end
-end
 
-% Verificar y crear estructura de carpetas
-% Carpeta principal dataset
-if ~exist('dataset', 'dir')
-    mkdir('dataset');
-    fprintf('Carpeta "dataset" creada correctamente.\n');
-end
+% Verificar y crear estructura de carpetas utilizando la función modular
+carpetas = {
+    'dataset',
+    fullfile('dataset', 'train'),
+    fullfile('dataset', 'test'),
+    fullfile('dataset', 'train', 'series'),
+    fullfile('dataset', 'train', 'personajes'),
+    fullfile('dataset', 'test', 'series'),
+    fullfile('dataset', 'test', 'misclassified'),
+    fullfile('dataset', 'test', 'personajes')
+};
 
-% Carpetas train y test
-if ~exist(fullfile('dataset', 'train'), 'dir')
-    mkdir(fullfile('dataset', 'train'));
-    fprintf('Carpeta "dataset/train" creada correctamente.\n');
-end
-
-if ~exist(fullfile('dataset', 'test'), 'dir')
-    mkdir(fullfile('dataset', 'test'));
-    fprintf('Carpeta "dataset/test" creada correctamente.\n');
-end
-
-% Subcarpetas de train
-if ~exist(fullfile('dataset', 'train', 'series'), 'dir')
-    mkdir(fullfile('dataset', 'train', 'series'));
-    fprintf('Carpeta "dataset/train/series" creada correctamente.\n');
-end
-
-if ~exist(fullfile('dataset', 'train', 'personajes'), 'dir')
-    mkdir(fullfile('dataset', 'train', 'personajes'));
-    fprintf('Carpeta "dataset/train/personajes" creada correctamente.\n');
-end
-
-% Subcarpetas de test
-if ~exist(fullfile('dataset', 'test', 'series'), 'dir')
-    mkdir(fullfile('dataset', 'test', 'series'));
-    fprintf('Carpeta "dataset/test/series" creada correctamente.\n');
-end
-
-if ~exist(fullfile('dataset', 'test', 'misclassified'), 'dir')
-    mkdir(fullfile('dataset', 'test', 'misclassified'));
-    fprintf('Carpeta "dataset/test/misclassified" creada correctamente.\n');
-end
-
-if ~exist(fullfile('dataset', 'test', 'personajes'), 'dir')
-    mkdir(fullfile('dataset', 'test', 'personajes'));
-    fprintf('Carpeta "dataset/test/personajes" creada correctamente.\n');
-end
+% Crear toda la estructura de directorios necesaria
+crearEstructuraCarpetas(carpetas, true);
 
 % Carga el modelo de series
 modeloSeries = fullfile('series', 'SeriesSVM983.mat');
@@ -81,18 +42,20 @@ fprintf('%s\n', repmat('=', 1, 60));
 while true
     fprintf('\n¿Qué quieres hacer?\n\n');
     fprintf('   1. Identificar una SERIE\n');
-    fprintf('   4. Preparar Carpetas de Test\n\n');
-    fprintf('   2. Salir\n');    % Input con manejo de errores
+    fprintf('   2. Identificar una PERSONAJES\n');
+    fprintf('   3. Preparar Carpetas de Test\n');
+    fprintf('   4. Salir\n\n');
+
     while true
         try
-            userInput = input('Selecciona opción (1, 2 o 4): ', 's');
+            userInput = input('Selecciona opción (1, 2, 3 o 4): ', 's');
             opcion = str2double(userInput);
             
             % Verificar si el input es un número válido (1, 2 o 4)
-            if isnan(opcion) || ~ismember(opcion, [1, 2, 4])
+            if isnan(opcion) || ~ismember(opcion, [1, 2, 3, 4])
                 fprintf('\n%s\n', repmat('-', 1, 60));
                 fprintf('               Opción no válida.\n');
-                fprintf('       Por favor, selecciona 1, 2 o 4 únicamente.\n');
+                fprintf('       Por favor, selecciona 1, 2, 3 o 4 únicamente.\n');
                 fprintf('%s\n', repmat('-', 1, 60));
                 continue;
             end
@@ -104,7 +67,7 @@ while true
         end
     end
     
-    if opcion == 2
+    if opcion == 4
         fprintf('\n%s\n', repmat('-', 1, 60));
         fprintf('          Saliendo del programa. ¡Hasta pronto!\n');
         fprintf('%s\n', repmat('-', 1, 60));
@@ -140,7 +103,7 @@ while true
         % No continuar con el código hasta que se cierre la figura
         uiwait(seleccionFig);
           % La figura se cerrará automáticamente en las funciones callback
-    elseif opcion == 4
+    elseif opcion == 3
         fprintf('\n%s\n', repmat('-', 1, 60));
         fprintf('            PREPARACIÓN DE CARPETAS DE TEST\n');
         fprintf('%s\n', repmat('-', 1, 60));
