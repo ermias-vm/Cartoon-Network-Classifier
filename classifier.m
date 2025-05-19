@@ -23,13 +23,18 @@ carpetas = {
 crearEstructuraCarpetas(carpetas, true);
 
 % Carga el modelo de series
-modeloSeries = fullfile('series', 'SeriesSVM983.mat');
+modeloSeriesPath = fullfile('series', 'trainedModelSeries.mat');
 numBins = 20;
 
 % Nombres de las series
 seriesNames = {'barrufets','Bob esponja','gat i gos','Gumball', ...
     'hora de aventuras','Oliver y Benji','padre de familia', ...
     'pokemon','southpark','Tom y Jerry'};
+
+% Nombres de los personajes correspondientes a cada serie
+personajesNames = {'gran_barrufet', 'Bob_esponja', 'gat_i_gos', 'Gumball', ...
+    'Finn', 'Oliver', 'Peter_Griffin', ...
+    'Ash_Ketchum', 'Cartman', 'Tom'};
 
 
 % Mostrar menú principal (inicio)
@@ -42,7 +47,7 @@ fprintf('%s\n', repmat('=', 1, 60));
 while true
     fprintf('\n¿Qué quieres hacer?\n\n');
     fprintf('   1. Identificar una SERIE\n');
-    fprintf('   2. Identificar una PERSONAJES\n');
+    fprintf('   2. Identificar PERSONAJES\n');
     fprintf('   3. Preparar Carpetas de Test\n');
     fprintf('   4. Salir\n\n');
 
@@ -71,15 +76,14 @@ while true
         fprintf('\n%s\n', repmat('-', 1, 60));
         fprintf('          Saliendo del programa. ¡Hasta pronto!\n');
         fprintf('%s\n', repmat('-', 1, 60));
-        break;    
-    elseif opcion == 1
+        break;    elseif opcion == 1
         fprintf('\n%s\n', repmat('-', 1, 60));
         fprintf('                IDENTIFICACIÓN DE SERIE\n');
         fprintf('%s\n', repmat('-', 1, 60));
         
         % Cargar el modelo entrenado
-        modeloPath = fullfile('trainedModels', modeloSeries);
-        modeloVar = erase(basename(modeloSeries), '.mat');
+        modeloPath = fullfile('trainedModels', 'series', 'trainedModelSeries.mat');
+        modeloVar = erase(basename('trainedModelSeries.mat'), '.mat');
         
         try
             tmp = load(modeloPath);
@@ -98,11 +102,43 @@ while true
                  'Callback', @(src, event) seleccionarImagen(src, seleccionFig, modelo, seriesNames, numBins));
           uicontrol('Style', 'pushbutton', 'String', 'Seleccionar Carpeta', ...
                  'Position', [50 60 300 40], 'FontSize', 12, ...
-                 'Callback', @(src, event) seleccionarCarpeta(src, seleccionFig, modelo, seriesNames, numBins));
-        
+                 'Callback', @(src, event) seleccionarCarpeta(src, seleccionFig, modelo, seriesNames, numBins));        
         % No continuar con el código hasta que se cierre la figura
         uiwait(seleccionFig);
           % La figura se cerrará automáticamente en las funciones callback
+    elseif opcion == 2
+        fprintf('\n%s\n', repmat('-', 1, 60));
+        fprintf('                IDENTIFICACIÓN DE PERSONAJES\n');
+        fprintf('%s\n', repmat('-', 1, 60));
+        
+        % Cargar el modelo de series primero para identificar la serie
+        modeloSeriesPath = fullfile('trainedModels', 'series', 'trainedModelSeries.mat');
+        
+        try
+            % Cargar el modelo de series
+            tmp = load(modeloSeriesPath);
+            modeloVarSeries = erase(basename(modeloSeriesPath), '.mat');
+            modeloSeries = tmp.(modeloVarSeries);
+            
+            % Crear una figura para mostrar los botones de selección
+            seleccionFig = figure('Name', 'Selección de entrada para Personajes', 'NumberTitle', 'off', ...
+                                'MenuBar', 'none', 'ToolBar', 'none', 'Position', [300 300 400 200]);
+            
+            % Crear los botones para seleccionar imagen o carpeta
+            uicontrol('Style', 'pushbutton', 'String', 'Seleccionar Imagen', ...
+                     'Position', [50 120 300 40], 'FontSize', 12, ...
+                     'Callback', @(src, event) seleccionarImagenPersonaje(src, seleccionFig, modeloSeries, seriesNames, personajesNames, numBins));
+              uicontrol('Style', 'pushbutton', 'String', 'Seleccionar Carpeta', ...
+                     'Position', [50 60 300 40], 'FontSize', 12, ...
+                     'Callback', @(src, event) seleccionarCarpetaPersonaje(src, seleccionFig, modeloSeries, seriesNames, personajesNames, numBins));
+            
+            % No continuar con el código hasta que se cierre la figura
+            uiwait(seleccionFig);
+        catch e
+            fprintf('\n%s\n', repmat('!', 1, 60));
+            fprintf('  Error al cargar el modelo de series: %s\n', e.message);
+            fprintf('%s\n', repmat('!', 1, 60));
+        end
     elseif opcion == 3
         fprintf('\n%s\n', repmat('-', 1, 60));
         fprintf('            PREPARACIÓN DE CARPETAS DE TEST\n');
@@ -698,6 +734,309 @@ function prepararCarpetasTest(seriesNames)
     
     % Mostrar distribución de imágenes por serie
     mostrarDistribucionSeries(seriesNames, rutaBaseTest);
+    
+    fprintf('\n%s\n', repmat('-', 1, 60));
+end
+
+%% Función para manejar la selección de imagen para personajes
+function seleccionarImagenPersonaje(~, figHandle, modeloSeries, seriesNames, personajesNames, numBins)
+    % Usar la carpeta dataset como ubicación inicial
+    rutaInicial = fullfile(pwd, 'dataset');
+    
+    % Verificar que la carpeta existe, sino usar pwd
+    if ~exist(rutaInicial, 'dir')
+        rutaInicial = pwd;
+    end
+    
+    [file, path] = uigetfile({'*.jpg;*.jpeg;*.png', 'Imágenes (*.jpg, *.jpeg, *.png)'; ...
+                            '*.*', 'Todos los archivos (*.*)'}, ...
+                           'Selecciona una imagen', rutaInicial);
+    
+    % Si se seleccionó un archivo
+    if ~isequal(file, 0)
+        imgPath = fullfile(path, file);
+        % Cerrar la figura para continuar con el procesamiento
+        delete(figHandle);
+        % Procesar la imagen para personajes
+        procesarImagenPersonaje(imgPath, modeloSeries, seriesNames, personajesNames, numBins);
+    else
+        % No hacer nada, mantener la figura abierta
+    end
+end
+
+%% Función para manejar la selección de carpeta para personajes
+function seleccionarCarpetaPersonaje(~, figHandle, modeloSeries, seriesNames, personajesNames, numBins)
+    % Usar la carpeta dataset como ubicación inicial
+    rutaInicial = fullfile(pwd, 'dataset');
+    
+    % Verificar si la carpeta existe, de lo contrario usar pwd
+    if ~exist(rutaInicial, 'dir')
+        rutaInicial = pwd;
+    end
+    
+    carpeta = uigetdir(rutaInicial, 'Selecciona una carpeta');
+    
+    % Si se seleccionó una carpeta
+    if ~isequal(carpeta, 0)
+        % Cerrar la figura para continuar con el procesamiento
+        delete(figHandle);
+        
+        % Verificar si contiene subcarpetas
+        contenido = dir(carpeta);
+        contieneSubcarpetas = false;
+        
+        % Filtrar . y ..
+        contenido = contenido(~ismember({contenido.name}, {'.', '..'}));
+        
+        % Buscar subcarpetas
+        for i = 1:length(contenido)
+            if contenido(i).isdir
+                contieneSubcarpetas = true;
+                break;
+            end
+        end
+        
+        if contieneSubcarpetas
+            % Es una carpeta que contiene subcarpetas (dataset completo)
+            fprintf('\n%s\n', repmat('!', 1, 60));
+            fprintf('  Procesamiento de carpetas múltiples para personajes no implementado.\n');
+            fprintf('  Por favor, selecciona una carpeta que contenga solo imágenes.\n');
+            fprintf('%s\n', repmat('!', 1, 60));
+        else
+            % Es una carpeta sin subcarpetas (contiene imágenes)
+            [~, nombreCarpeta] = fileparts(carpeta);
+            procesarCarpetaPersonaje(carpeta, modeloSeries, seriesNames, personajesNames, numBins, nombreCarpeta);
+        end
+    else
+        % No hacer nada, mantener la figura abierta
+    end
+end
+
+%% Función para procesar una sola imagen para personajes
+function procesarImagenPersonaje(imgPath, modeloSeries, seriesNames, personajesNames, numBins)
+    try
+        fprintf('\n%s\n', repmat('*', 1, 60));
+        fprintf('           ANALIZANDO IMAGEN PARA PERSONAJE: %s\n', basename(imgPath));
+        fprintf('%s\n', repmat('*', 1, 60));
+        
+        img = imread(imgPath);
+        
+        % Normalizar por número de píxeles para el modelo de series
+        [alto, ancho, ~] = size(img);
+        numPixeles = alto * ancho;
+        vector = extraer_caracteristicas(img, numBins);
+        Xtest = vector / numPixeles;
+        
+        % Predecir la serie primero
+        if isfield(modeloSeries, 'RequiredVariables')
+            predictorNames = modeloSeries.RequiredVariables;
+            XtestTable = array2table(Xtest, 'VariableNames', predictorNames);
+            [serieIdx, ~] = modeloSeries.predictFcn(XtestTable);
+        else
+            [serieIdx, ~] = modeloSeries.predictFcn(Xtest);
+        end
+        
+        % Obtener el nombre de la serie y personaje correspondiente
+        seriePredecida = seriesNames{serieIdx};
+        personajeSerie = personajesNames{serieIdx};
+                
+        fprintf('\n%s\n', repmat('-', 1, 60));
+        fprintf('          SERIE DETECTADA: %s\n', upper(seriePredecida));
+        fprintf('          BUSCANDO PERSONAJE: %s\n', upper(personajeSerie));
+        fprintf('%s\n', repmat('-', 1, 60));
+        
+        % Cargar el modelo del personaje correspondiente a la serie
+        modeloPersonajePath = fullfile('trainedModels', 'personajes', personajeSerie, ['trainedModel' personajeSerie '.mat']);
+        
+        % Verificar si existe el modelo del personaje
+        if exist(modeloPersonajePath, 'file')
+            try
+                % Cargar el modelo del personaje
+                tmp = load(modeloPersonajePath);
+                % Obtener el nombre de la variable en el archivo .mat
+                modeloVarPersonaje = erase(basename(modeloPersonajePath), '.mat');
+                modeloPersonaje = tmp.(modeloVarPersonaje);
+                  % Predecir si el personaje está presente en la imagen
+                if isfield(modeloPersonaje, 'RequiredVariables')
+                    predictorNamesPersonaje = modeloPersonaje.RequiredVariables;
+                    XtestTablePersonaje = array2table(Xtest, 'VariableNames', predictorNamesPersonaje);
+                    [personajePresente, ~] = modeloPersonaje.predictFcn(XtestTablePersonaje);
+                else
+                    [personajePresente, ~] = modeloPersonaje.predictFcn(Xtest);
+                end
+                
+                % Mostrar resultado con formato mejorado
+                fprintf('\n%s\n', repmat('-', 1, 60));
+                fprintf('          RESULTADO DEL ANÁLISIS DE PERSONAJE\n');
+                fprintf('%s\n', repmat('-', 1, 60));
+                  % Interpretar el resultado según el modelo (puede variar dependiendo del modelo)
+                if personajePresente == 1
+                    fprintf('\n  PERSONAJE DETECTADO: ');
+                    fprintf('\n  >> %s <<\n\n', upper(personajeSerie));
+                else
+                    fprintf('\n  El personaje %s NO ha sido detectado en la imagen.\n\n', upper(personajeSerie));
+                end
+                
+                fprintf('\n%s\n', repmat('-', 1, 60));
+            catch e
+                fprintf('\n%s\n', repmat('!', 1, 60));
+                fprintf('  Error al cargar o usar el modelo del personaje: %s\n', e.message);
+                fprintf('%s\n', repmat('!', 1, 60));
+            end
+        else
+            fprintf('\n%s\n', repmat('!', 1, 60));
+            fprintf('  No se encontró el modelo para el personaje %s\n', personajeSerie);
+            fprintf('  Ruta esperada: %s\n', modeloPersonajePath);
+            fprintf('%s\n', repmat('!', 1, 60));
+        end
+    catch e
+        fprintf('\n%s\n', repmat('!', 1, 60));
+        fprintf('  Error al procesar la imagen: %s\n', e.message);
+        fprintf('%s\n', repmat('!', 1, 60));
+    end
+end
+
+%% Función para procesar una carpeta con imágenes para personajes
+function procesarCarpetaPersonaje(carpetaPath, modeloSeries, seriesNames, personajesNames, numBins, nombreCarpeta)
+    archivos = dir(fullfile(carpetaPath, '*.jpg'));
+    total = numel(archivos);
+    
+    if total == 0
+        fprintf('\n%s\n', repmat('-', 1, 60));
+        fprintf('       No se encontraron imágenes en la carpeta.\n');
+        fprintf('%s\n', repmat('-', 1, 60));
+        return;
+    end
+    
+    fprintf('\n%s\n', repmat('*', 1, 60));
+    fprintf('     PROCESANDO %d IMÁGENES DE LA CARPETA "%s" PARA PERSONAJES\n', total, nombreCarpeta);
+    fprintf('%s\n', repmat('*', 1, 60));
+    
+    % Crear una figura para mostrar el progreso visualmente
+    progressFig = figure('Name', 'Progreso de procesamiento de personajes', 'NumberTitle', 'off', ...
+                         'MenuBar', 'none', 'ToolBar', 'none', 'Position', [300 300 600 150]);
+    
+    % Crear una barra de progreso
+    progressBar = uicontrol('Style', 'text', 'Position', [50 100 1 30], ...
+                           'BackgroundColor', [0.8 0.9 0.8]);
+    
+    % Texto para mostrar el progreso
+    progressText = uicontrol('Style', 'text', 'Position', [50 70 500 20], ...
+                            'String', 'Iniciando procesamiento...');
+    
+    % Tabla para mostrar resultados de cada serie y personaje
+    resultTable = uicontrol('Style', 'text', 'Position', [50 20 500 40], ...
+                           'String', '', 'HorizontalAlignment', 'left');
+    
+    drawnow;
+    
+    % Contadores para cada serie y personaje
+    resultadosPorSerie = zeros(length(seriesNames), 3); % [detecciones_serie, detecciones_personaje, total]
+    
+    for j = 1:total
+        imgPath = fullfile(archivos(j).folder, archivos(j).name);
+        try
+            img = imread(imgPath);
+            
+            % Normalizar por número de píxeles
+            [alto, ancho, ~] = size(img);
+            numPixeles = alto * ancho;
+            vector = extraer_caracteristicas(img, numBins);
+            Xtest = vector / numPixeles;
+            
+            % Predecir la serie
+            if isfield(modeloSeries, 'RequiredVariables')
+                predictorNames = modeloSeries.RequiredVariables;
+                XtestTable = array2table(Xtest, 'VariableNames', predictorNames);
+                [serieIdx, ~] = modeloSeries.predictFcn(XtestTable);
+            else
+                [serieIdx, ~] = modeloSeries.predictFcn(Xtest);
+            end
+            
+            % Incrementar contador de detección de serie
+            resultadosPorSerie(serieIdx, 1) = resultadosPorSerie(serieIdx, 1) + 1;
+            resultadosPorSerie(serieIdx, 3) = resultadosPorSerie(serieIdx, 3) + 1;
+            
+            % Obtener el personaje correspondiente a la serie
+            personajeSerie = personajesNames{serieIdx};
+            
+            % Cargar el modelo del personaje
+            modeloPersonajePath = fullfile('trainedModels', 'personajes', personajeSerie, ['trainedModel' personajeSerie '.mat']);
+            
+            % Verificar si existe el modelo del personaje
+            if exist(modeloPersonajePath, 'file')
+                % Cargar el modelo del personaje
+                tmp = load(modeloPersonajePath);
+                modeloVarPersonaje = erase(basename(modeloPersonajePath), '.mat');
+                modeloPersonaje = tmp.(modeloVarPersonaje);
+                
+                % Predecir si el personaje está presente
+                if isfield(modeloPersonaje, 'RequiredVariables')
+                    predictorNamesPersonaje = modeloPersonaje.RequiredVariables;
+                    XtestTablePersonaje = array2table(Xtest, 'VariableNames', predictorNamesPersonaje);
+                    [personajePresente, ~] = modeloPersonaje.predictFcn(XtestTablePersonaje);
+                else
+                    [personajePresente, ~] = modeloPersonaje.predictFcn(Xtest);
+                end
+                
+                % Si se detectó el personaje, incrementar contador
+                if personajePresente == 1
+                    resultadosPorSerie(serieIdx, 2) = resultadosPorSerie(serieIdx, 2) + 1;
+                end
+            end
+            
+            % Actualizar barra de progreso
+            progressPct = j / total;
+            set(progressBar, 'Position', [50 100 floor(500 * progressPct) 30]);
+            
+            % Actualizar texto de progreso
+            set(progressText, 'String', sprintf('Procesando: %d/%d (%.1f%%)', j, total, progressPct * 100));
+            
+            % Construir y actualizar tabla de resultados
+            tableStr = '';
+            for i = 1:length(seriesNames)
+                if resultadosPorSerie(i, 3) > 0
+                    pctSerie = 100 * resultadosPorSerie(i, 1) / resultadosPorSerie(i, 3);
+                    pctPersonaje = 100 * resultadosPorSerie(i, 2) / resultadosPorSerie(i, 3);
+                    tableStr = [tableStr, sprintf('%s: %d/%d (%.1f%%) - %s: %d/%d (%.1f%%)\n', ...
+                        seriesNames{i}, resultadosPorSerie(i, 1), resultadosPorSerie(i, 3), pctSerie, ...
+                        personajesNames{i}, resultadosPorSerie(i, 2), resultadosPorSerie(i, 3), pctPersonaje)];
+                end
+            end
+            set(resultTable, 'String', tableStr);
+            
+            drawnow;
+        catch e
+            disp(['Error al procesar la imagen: ' imgPath]);
+            disp(['Mensaje de error: ' e.message]);
+        end
+    end
+    
+    % Cerrar la figura de progreso
+    if ishandle(progressFig)
+        close(progressFig);
+    end
+    
+    % Mostrar resultados finales
+    fprintf('\n%s\n', repmat('-', 1, 60));
+    fprintf('          RESULTADOS DE DETECCIÓN DE PERSONAJES\n');
+    fprintf('%s\n', repmat('-', 1, 60));
+    fprintf('\n  Total de imágenes procesadas: %d\n\n', total);
+    
+    % Tabla de resultados
+    fprintf('  %-20s %-30s %-30s\n', 'SERIE', 'DETECCIÓN SERIE', 'DETECCIÓN PERSONAJE');
+    fprintf('  %-20s %-30s %-30s\n', '-----------------', '--------------------', '----------------------');
+    
+    for i = 1:length(seriesNames)
+        if resultadosPorSerie(i, 3) > 0
+            pctSerie = 100 * resultadosPorSerie(i, 1) / resultadosPorSerie(i, 3);
+            pctPersonaje = 100 * resultadosPorSerie(i, 2) / resultadosPorSerie(i, 3);
+            
+            fprintf('  %-20s %4d/%-6d (%6.2f%%) %15d/%-6d (%6.2f%%)\n', ...
+                seriesNames{i}, resultadosPorSerie(i, 1), resultadosPorSerie(i, 3), pctSerie, ...
+                resultadosPorSerie(i, 2), resultadosPorSerie(i, 3), pctPersonaje);
+        end
+    end
     
     fprintf('\n%s\n', repmat('-', 1, 60));
 end
