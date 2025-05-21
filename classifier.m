@@ -1,4 +1,4 @@
-%% CLASIFICADOR DE SERIES DE DIBUJOS ANIMADOS DE CARTOON NETWORK
+﻿%% CLASIFICADOR DE SERIES DE DIBUJOS ANIMADOS DE CARTOON NETWORK
 % Este programa identifica series de dibujos animados a partir de imágenes
 % utilizando modelos entrenados previamente.
 
