@@ -1,13 +1,20 @@
-function cerrarBarraProgreso(barra)
+function cerrarBarraProgreso(progressFig)
 % CERRARBARRAPROGRESO Cierra la figura que contiene una barra de progreso
-%   CERRARBARRAPROGRESO(barra) cierra la figura que contiene la barra de
-%   progreso indicada.
+%
+% Uso:
+%   cerrarBarraProgreso(progressFig)
+%
+% Parámetros:
+%   progressFig - Estructura devuelta por crearBarraProgreso
 
-    % Obtener la figura asociada a la barra
-    fig = getappdata(barra, 'figura');
-    
     % Cerrar la figura si existe
-    if ishandle(fig)
-        close(fig);
+    if isstruct(progressFig) && isfield(progressFig, 'figura') && ishandle(progressFig.figura)
+        close(progressFig.figura);
+    elseif ishandle(progressFig)
+        % Para compatibilidad con versiones anteriores
+        fig = getappdata(progressFig, 'figura');
+        if ishandle(fig)
+            close(fig);
+        end
     end
 end
