@@ -20,7 +20,7 @@ function procesarDatasetCompleto(datasetPath, modelo, seriesNames, numBins)
     misclassifiedTableGlobal = cell(0, 3);
     
     % Crear figura principal para mostrar el progreso global
-    mainProgressFig = crearBarraProgreso('Progreso global', 500, 150);
+    mainProgressFig = crearBarraProgreso('Progreso global');
     
     % Calcular el total de imágenes para tener una idea del progreso global
     totalImagenesTodas = 0;
@@ -40,13 +40,7 @@ function procesarDatasetCompleto(datasetPath, modelo, seriesNames, numBins)
         
         % Verificar si existe la carpeta
         if ~isfolder(carpetaSerie)
-            fprintf('\n  No se encontró la carpeta para la serie "%s"\n', seriesNames{i});
             continue;
-        end
-        
-        % Actualizar etiqueta de serie en la barra de progreso
-        if isfield(mainProgressFig, 'serieLabel') && ishandle(mainProgressFig.serieLabel)
-            set(mainProgressFig.serieLabel, 'String', ['Procesando serie: ' seriesNames{i}]);
         end
         
         % Procesar imágenes de esta serie
@@ -54,7 +48,6 @@ function procesarDatasetCompleto(datasetPath, modelo, seriesNames, numBins)
         totalSerie = numel(archivos);
         
         if totalSerie == 0
-            fprintf('\n  No se encontraron imágenes para la serie "%s"\n', seriesNames{i});
             continue;
         end
         
@@ -62,34 +55,23 @@ function procesarDatasetCompleto(datasetPath, modelo, seriesNames, numBins)
         
         mostrarEncabezado(['Procesando ' num2str(totalSerie) ' imágenes de la serie "' seriesNames{i} '"...'], '-');
         
-        % Resetear barra de progreso de la serie actual
-        if isfield(mainProgressFig, 'currentProgressBar') && ishandle(mainProgressFig.currentProgressBar)
-            set(mainProgressFig.currentProgressBar, 'Position', [50 90 1 20]);
-        end
-        if isfield(mainProgressFig, 'currentProgressText') && ishandle(mainProgressFig.currentProgressText)
-            set(mainProgressFig.currentProgressText, 'String', 'Iniciando...');
-        end
-        drawnow;
-        
+        % Procesar cada imagen de la serie
         for j = 1:totalSerie
             imgPath = fullfile(archivos(j).folder, archivos(j).name);
             try
                 img = imread(imgPath);
-                
-                % Usar la función procesarPrediccionSerie para obtener la predicción
                 resultados = procesarPrediccionSerie(img, modelo, numBins);
-                yfit = resultados.prediccion;
                 
-                % Comprobar si es correcta
-                esCorrecto = (yfit == i);
+                % Verificar si es correcta la predicción
+                esCorrecto = (resultados.prediccion == i);
                 if esCorrecto
                     aciertosSerie = aciertosSerie + 1;
                     totalAciertos = totalAciertos + 1;
                 else
-                    % Añadir a tabla de imágenes mal clasificadas global
+                    % Añadir a tabla de imágenes mal clasificadas
                     misclassifiedTableGlobal(end+1, :) = {
                         imgPath, ... % Ruta completa
-                        seriesNames{yfit}, ... % Serie predicha
+                        seriesNames{resultados.prediccion}, ... % Serie predicha
                         seriesNames{i} ... % Serie correcta
                     };
                 end
@@ -97,29 +79,23 @@ function procesarDatasetCompleto(datasetPath, modelo, seriesNames, numBins)
                 totalImagenes = totalImagenes + 1;
                 imagenesProcesadas = imagenesProcesadas + 1;
                 
-                % Actualizar progreso de la serie actual
-                progressSeriePct = j / totalSerie;
-                actualizarBarraProgreso(mainProgressFig, j, totalSerie, sprintf('Serie %s: %d/%d (%.1f%%)', ...
-                    seriesNames{i}, j, totalSerie, progressSeriePct * 100), 'current');
-                  % Actualizar progreso global
+                % Actualizar barra de progreso global
                 if totalImagenesTodas > 0
-                    progressGlobalPct = imagenesProcesadas / totalImagenesTodas;
-                    actualizarBarraProgreso(mainProgressFig, imagenesProcesadas, totalImagenesTodas, ...
-                        sprintf('Progreso total: %.1f%% (%d/%d imágenes)', ...
-                        progressGlobalPct * 100, imagenesProcesadas, totalImagenesTodas), 'global');
+                    actualizarBarraProgreso(mainProgressFig, imagenesProcesadas, totalImagenesTodas);
                 end
                 
-                drawnow;
             catch e
-                fprintf('\nError al procesar la imagen: %s - %s\n', imgPath, e.message);
+                fprintf('Error al procesar la imagen %s: %s\n', archivos(j).name, e.message);
             end
         end
         
-        resultadosPorSerie(i, :) = [aciertosSerie, totalSerie];
+        % Guardar resultados de esta serie
+        resultadosPorSerie(i, 1) = aciertosSerie;
+        resultadosPorSerie(i, 2) = totalSerie;
         
-        % Mostrar resultados de esta serie
+        % Mostrar resultados parciales
         porcentajeSerie = 100 * aciertosSerie / totalSerie;
-        fprintf('\n  Resultados para "%s": %d de %d (%.2f%%)\n', seriesNames{i}, aciertosSerie, totalSerie, porcentajeSerie);
+        fprintf('  Resultados para "%s": %d de %d (%.2f%%)\n', seriesNames{i}, aciertosSerie, totalSerie, porcentajeSerie);
     end
     
     % Cerrar la figura de progreso
@@ -145,24 +121,29 @@ function mostrarResultadosDataset(totalAciertos, totalImagenes, resultadosPorSer
     fprintf('  %-20s %10s %10s %10s\n', '-----------------', '--------', '-----', '----------');
     
     for i = 1:length(seriesNames)
-        aciertos = resultadosPorSerie(i, 1);
-        total = resultadosPorSerie(i, 2);
-        
-        if total > 0
-            porcentaje = 100 * aciertos / total;
-            fprintf('  %-20s %10d %10d %10.2f%%\n', seriesNames{i}, aciertos, total, porcentaje);
+        if resultadosPorSerie(i, 2) > 0
+            porcentaje = 100 * resultadosPorSerie(i, 1) / resultadosPorSerie(i, 2);
+            fprintf('  %-20s %10d %10d %9.2f%%\n', seriesNames{i}, resultadosPorSerie(i, 1), resultadosPorSerie(i, 2), porcentaje);
         end
     end
     
     % Guardar tabla de imágenes mal clasificadas
     if ~isempty(misclassifiedTableGlobal)
-        % Extraer el nombre de la carpeta principal
-        [~, nombreCarpeta] = fileparts(datasetPath);
+        % Crear directorio si no existe
+        dirMisclassified = fullfile('dataset', 'test', 'misclassified');
+        if ~exist(dirMisclassified, 'dir')
+            mkdir(dirMisclassified);
+        end
+        
         % Crear nombre del archivo
-        nombreArchivo = fullfile('dataset', 'test', 'misclassified', [nombreCarpeta, '.mat']);
+        nombreArchivo = fullfile(dirMisclassified, 'dataset_completo.mat');
+        
+        % Crear tabla con encabezados
+        T_misclassified = cell(size(misclassifiedTableGlobal, 1) + 1, 3);
+        T_misclassified(1, :) = {'Ubicacion', 'Predicho', 'Correcto'};
+        T_misclassified(2:end, :) = misclassifiedTableGlobal;
         
         % Guardar la tabla
-        T_misclassified = misclassifiedTableGlobal;
         save(nombreArchivo, 'T_misclassified');
         fprintf('\n  Tabla de imágenes mal clasificadas guardada en: %s\n', nombreArchivo);
         fprintf('  Total de imágenes mal clasificadas: %d\n', size(misclassifiedTableGlobal, 1));

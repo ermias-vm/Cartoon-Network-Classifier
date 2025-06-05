@@ -51,27 +51,31 @@ function seleccionarCarpetaSerie(~, figHandle, modelo, seriesNames, numBins)
         % Cerrar la figura para continuar con el procesamiento
         delete(figHandle);
         
-        % Verificar si contiene subcarpetas
-        contenido = dir(rutaCarpeta);
-        contieneSubcarpetas = false;
+        % Obtener el nombre de la carpeta
+        [~, nombreCarpeta] = fileparts(rutaCarpeta);
         
-        % Filtrar . y ..
+        % Verificar si es la carpeta "series" que contiene todas las subcarpetas
+        contenido = dir(rutaCarpeta);
         contenido = contenido(~ismember({contenido.name}, {'.', '..'}));
         
-        % Buscar subcarpetas
+        % Contar cuántas subcarpetas coinciden con nombres de series conocidas
+        subcarpetasConocidas = 0;
         for i = 1:length(contenido)
             if contenido(i).isdir
-                contieneSubcarpetas = true;
-                break;
+                for j = 1:length(seriesNames)
+                    if strcmpi(contenido(i).name, seriesNames{j})
+                        subcarpetasConocidas = subcarpetasConocidas + 1;
+                        break;
+                    end
+                end
             end
         end
         
-        if contieneSubcarpetas
-            % Es una carpeta que contiene subcarpetas (dataset completo)
+        % Si tiene muchas subcarpetas conocidas, es el dataset completo
+        if subcarpetasConocidas >= 3  % Al menos 3 series conocidas
             procesarDatasetCompleto(rutaCarpeta, modelo, seriesNames, numBins);
         else
-            % Es una carpeta sin subcarpetas (contiene imágenes de una serie)
-            [~, nombreCarpeta] = fileparts(rutaCarpeta);
+            % Es una carpeta individual con imágenes de una serie
             procesarCarpetaSerie(rutaCarpeta, modelo, seriesNames, numBins, nombreCarpeta);
         end
     end

@@ -22,18 +22,35 @@ function resultados = procesarPrediccionSerie(img, modelo, numBins)
     
     % Crear tabla con los nombres correctos
     XtestTable = array2table(Xtest, 'VariableNames', predictorNames);
-    
-    % Predecir la serie
+      % Predecir la serie
     try
-        [yfit, scores] = modelo.predictFcn(XtestTable);
-    catch e
-        % Si falla con nombres generados, intentar con el modelo directamente
-        if isfield(modelo, 'ClassificationSVM')
+        % Intentar primero con la función predict del modelo
+        if isfield(modelo, 'predictFcn')
+            [yfit, scores] = modelo.predictFcn(XtestTable);
+        elseif isfield(modelo, 'ClassificationSVM')
             % Usar el modelo SVM directamente
             yfit = predict(modelo.ClassificationSVM, Xtest);
             scores = [];
         else
-            rethrow(e);
+            error('Modelo no válido o no compatible');
+        end
+    catch e
+        % Como último recurso, intentar con el modelo SVM directamente
+        try
+            if isfield(modelo, 'ClassificationSVM')
+                yfit = predict(modelo.ClassificationSVM, Xtest);
+                scores = [];
+            else
+                error('No se pudo hacer la predicción: %s', e.message);
+            end
+        catch
+            % Si todo falla, crear tabla con nombres por defecto
+            XtestTable = array2table(Xtest);
+            if isfield(modelo, 'predictFcn')
+                [yfit, scores] = modelo.predictFcn(XtestTable);
+            else
+                error('Error al procesar la imagen: %s', e.message);
+            end
         end
     end
     

@@ -86,8 +86,7 @@ function procesarCarpetaSerie(carpetaPath, modelo, seriesNames, numBins, nombreC
         porcentaje = 100 * aciertos / total;
         mostrarEncabezado(['RESULTADOS PARA LA SERIE "' nombreCarpeta '"'], '-');
         fprintf('\n  Aciertos: %d de %d (%.2f%%)\n\n', aciertos, total, porcentaje);
-        
-        % Guardar tabla de imágenes mal clasificadas si existe la carpeta
+          % Guardar tabla de imágenes mal clasificadas si existe la carpeta
         if ~isempty(misclassifiedTable)
             % Crear directorio si no existe
             dirMisclassified = fullfile('dataset', 'test', 'misclassified');
@@ -98,8 +97,12 @@ function procesarCarpetaSerie(carpetaPath, modelo, seriesNames, numBins, nombreC
             % Crear nombre del archivo
             nombreArchivo = fullfile(dirMisclassified, [nombreCarpeta, '.mat']);
             
+            % Crear tabla con encabezados
+            T_misclassified = cell(size(misclassifiedTable, 1) + 1, 3);
+            T_misclassified(1, :) = {'Ubicacion', 'Predicho', 'Correcto'};
+            T_misclassified(2:end, :) = misclassifiedTable;
+            
             % Guardar la tabla
-            T_misclassified = misclassifiedTable;
             save(nombreArchivo, 'T_misclassified');
             fprintf('  Tabla de imágenes mal clasificadas guardada en: %s\n', nombreArchivo);
             fprintf('  Total de imágenes mal clasificadas: %d\n\n', size(misclassifiedTable, 1));
