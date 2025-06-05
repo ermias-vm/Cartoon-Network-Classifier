@@ -22,17 +22,29 @@ function procesarCarpetaSerie(carpetaPath, modelo, seriesNames, numBins, nombreC
     mostrarEncabezado(['PROCESANDO ' num2str(total) ' IMÁGENES DE LA CARPETA "' nombreCarpeta '"'], '*');
     
     aciertos = 0;
-    % Intentar encontrar la serie real basándose en el nombre de la carpeta
+    % Determinar si estamos procesando una carpeta de test
+    esDeTest = false;
     serieRealIdx = 0;
-    for i = 1:length(seriesNames)
-        if strcmpi(seriesNames{i}, nombreCarpeta)
-            serieRealIdx = i;
-            break;
+    
+    % Dividir la ruta en partes para determinar si es de test
+    partesRuta = strsplit(carpetaPath, filesep);
+    idxTest = find(strcmp(partesRuta, 'test'), 1);
+    idxSeries = find(strcmp(partesRuta, 'series'), 1);
+    
+    if ~isempty(idxTest) && ~isempty(idxSeries) && idxTest < idxSeries
+        % Es una carpeta de test/series/NombreSerie
+        esDeTest = true;
+        % Buscar la serie real basándose en el nombre de la carpeta
+        for i = 1:length(seriesNames)
+            if strcmpi(seriesNames{i}, nombreCarpeta)
+                serieRealIdx = i;
+                break;
+            end
         end
     end
     
     % Crear barra de progreso
-    [progressBar, progressText] = crearBarraProgreso('Progreso de procesamiento');
+    progressFig = crearBarraProgreso('Progreso de procesamiento');
     
     % Inicializar la tabla para imágenes mal clasificadas
     misclassifiedTable = cell(0, 3);
@@ -43,8 +55,8 @@ function procesarCarpetaSerie(carpetaPath, modelo, seriesNames, numBins, nombreC
             img = imread(imgPath);
             resultados = procesarPrediccionSerie(img, modelo, numBins);
             
-            % Si se conoce la serie real, comprobar si es correcta
-            if serieRealIdx > 0
+            % Si es de test, comprobar si es correcta la predicción
+            if esDeTest && serieRealIdx > 0
                 esCorrecto = (resultados.prediccion == serieRealIdx);
                 if esCorrecto
                     aciertos = aciertos + 1;
@@ -59,26 +71,32 @@ function procesarCarpetaSerie(carpetaPath, modelo, seriesNames, numBins, nombreC
             end
             
             % Actualizar barra de progreso
-            actualizarBarraProgreso(progressBar, progressText, j, total);
+            actualizarBarraProgreso(progressFig, j, total);
             
         catch e
-            fprintf('Error al procesar la imagen %s: %s\n', imgPath, e.message);
+            fprintf('Error al procesar la imagen %s: %s\n', archivos(j).name, e.message);
         end
     end
     
     % Cerrar la barra de progreso
-    cerrarBarraProgreso(progressBar);
+    cerrarBarraProgreso(progressFig);
     
     % Mostrar resultados con formato mejorado
-    if serieRealIdx > 0
+    if esDeTest && serieRealIdx > 0
         porcentaje = 100 * aciertos / total;
         mostrarEncabezado(['RESULTADOS PARA LA SERIE "' nombreCarpeta '"'], '-');
         fprintf('\n  Aciertos: %d de %d (%.2f%%)\n\n', aciertos, total, porcentaje);
         
-        % Guardar tabla de imágenes mal clasificadas
+        % Guardar tabla de imágenes mal clasificadas si existe la carpeta
         if ~isempty(misclassifiedTable)
+            % Crear directorio si no existe
+            dirMisclassified = fullfile('dataset', 'test', 'misclassified');
+            if ~exist(dirMisclassified, 'dir')
+                mkdir(dirMisclassified);
+            end
+            
             % Crear nombre del archivo
-            nombreArchivo = fullfile('dataset', 'test', 'misclassified', [nombreCarpeta, '.mat']);
+            nombreArchivo = fullfile(dirMisclassified, [nombreCarpeta, '.mat']);
             
             % Guardar la tabla
             T_misclassified = misclassifiedTable;
@@ -86,7 +104,12 @@ function procesarCarpetaSerie(carpetaPath, modelo, seriesNames, numBins, nombreC
             fprintf('  Tabla de imágenes mal clasificadas guardada en: %s\n', nombreArchivo);
             fprintf('  Total de imágenes mal clasificadas: %d\n\n', size(misclassifiedTable, 1));
         end
+    elseif esDeTest
+        mostrarEncabezado(['No se pudo determinar la serie real para "' nombreCarpeta '"'], '-');
+        fprintf('\n  La carpeta no coincide con ninguna serie conocida.\n\n');
     else
-        mostrarEncabezado(['No se pudo determinar la serie real a partir del nombre de la carpeta.\nLa carpeta "' nombreCarpeta '" no coincide con ninguna serie conocida.'], '-');
+        mostrarEncabezado(['PROCESAMIENTO COMPLETADO PARA "' nombreCarpeta '"'], '-');
+        fprintf('\n  Se procesaron %d imágenes de la carpeta externa.\n', total);
+        fprintf('  Solo se muestra la predicción (no hay verificación de exactitud).\n\n');
     end
 end

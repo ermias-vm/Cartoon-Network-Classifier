@@ -101,11 +101,10 @@ function procesarDatasetCompleto(datasetPath, modelo, seriesNames, numBins)
                 progressSeriePct = j / totalSerie;
                 actualizarBarraProgreso(mainProgressFig, j, totalSerie, sprintf('Serie %s: %d/%d (%.1f%%)', ...
                     seriesNames{i}, j, totalSerie, progressSeriePct * 100), 'current');
-                
-                % Actualizar progreso global
+                  % Actualizar progreso global
                 if totalImagenesTodas > 0
                     progressGlobalPct = imagenesProcesadas / totalImagenesTodas;
-                    actualizarBarraProgreso(mainProgressFig, imagenesProcesadas, totalImagenesTodas, 
+                    actualizarBarraProgreso(mainProgressFig, imagenesProcesadas, totalImagenesTodas, ...
                         sprintf('Progreso total: %.1f%% (%d/%d imágenes)', ...
                         progressGlobalPct * 100, imagenesProcesadas, totalImagenesTodas), 'global');
                 end

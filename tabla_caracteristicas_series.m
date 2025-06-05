@@ -44,21 +44,13 @@ for i = 1:numImagenes_S
         set(progressBar, 'Position', [50 50 floor(400 * porcentaje) 30]);
         set(progressText, 'String', sprintf('Procesando: %d/%d imágenes de entrenamiento (%.1f%%)', ...
             imagenesProcesadas, totalTrain, porcentaje * 100));
+          img = imread(fullfile(T_entradasSeries{i,2}, T_entradasSeries{i,1}));
         
-        img = imread(fullfile(T_entradasSeries{i,2}, T_entradasSeries{i,1}));
-        
-        % Extraer características y normalizar por número de píxeles
-        vector = extraer_caracteristicas(img, numBins);
-        
-        % Obtener el número total de píxeles de la imagen
-        [alto, ancho, ~] = size(img);
-        numPixeles = alto * ancho;
-        
-        % Normalizar las características de color dividiéndolas por el número de píxeles
-        vector_normalizado = vector / numPixeles;
+        % Extraer características ya normalizadas por número de píxeles
+        vector = extraer_caracteristicas_series(img, numBins);
         
         % Añadir la etiqueta al final del vector
-        vector_normalizado = [vector_normalizado, str2double(T_entradasSeries{i,3})];
+        vector_normalizado = [vector, str2double(T_entradasSeries{i,3})];
         T_caracteristicasSeries = [T_caracteristicasSeries; vector_normalizado];
     end
     

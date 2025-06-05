@@ -14,24 +14,34 @@ function resultados = procesarPrediccionSerie(img, modelo, numBins)
 %     .prediccion - Índice de la serie predicha
 %     .vector - Vector de características normalizado
 
-    % Normalizar por número de píxeles
-    [alto, ancho, ~] = size(img);
-    numPixeles = alto * ancho;
-    vector = extraer_caracteristicas(img, numBins);
-    Xtest = vector / numPixeles;
+    % Extraer características ya normalizadas por número de píxeles
+    Xtest = extraer_caracteristicas_series(img, numBins);
+    
+    % Generar nombres de variables consistentes con el entrenamiento
+    predictorNames = generarNombresVariables(numBins);
+    
+    % Crear tabla con los nombres correctos
+    XtestTable = array2table(Xtest, 'VariableNames', predictorNames);
     
     % Predecir la serie
-    if isfield(modelo, 'RequiredVariables')
-        predictorNames = modelo.RequiredVariables;
-        XtestTable = array2table(Xtest, 'VariableNames', predictorNames);
+    try
         [yfit, scores] = modelo.predictFcn(XtestTable);
-    else
-        [yfit, scores] = modelo.predictFcn(Xtest);
+    catch e
+        % Si falla con nombres generados, intentar con el modelo directamente
+        if isfield(modelo, 'ClassificationSVM')
+            % Usar el modelo SVM directamente
+            yfit = predict(modelo.ClassificationSVM, Xtest);
+            scores = [];
+        else
+            rethrow(e);
+        end
     end
     
     % Crear estructura de resultados
     resultados = struct();
     resultados.prediccion = yfit;
     resultados.vector = Xtest;
-    resultados.scores = scores;
+    if ~isempty(scores)
+        resultados.scores = scores;
+    end
 end

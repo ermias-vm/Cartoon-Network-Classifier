@@ -15,10 +15,8 @@ carpetas = {
     fullfile('dataset', 'train'),
     fullfile('dataset', 'test'),
     fullfile('dataset', 'train', 'series'),
-    fullfile('dataset', 'train', 'personajes'),
     fullfile('dataset', 'test', 'series'),
-    fullfile('dataset', 'test', 'misclassified'),
-    fullfile('dataset', 'test', 'personajes')
+    fullfile('dataset', 'test', 'misclassified')
 };
 
 % Crear toda la estructura de directorios necesaria
@@ -33,20 +31,14 @@ seriesNames = {'barrufets','Bob esponja','gat i gos','Gumball', ...
     'hora de aventuras','Oliver y Benji','padre de familia', ...
     'pokemon','southpark','Tom y Jerry'};
 
-% Nombres de los personajes correspondientes a cada serie
-personajesNames = {'gran_barrufet', 'Bob_esponja', 'gat_i_gos', 'Gumball', ...
-    'Finn', 'Oliver', 'Peter_Griffin', ...
-    'Ash_Ketchum', 'Cartman', 'Tom'};
-
 % Mostrar menú principal
 mostrarEncabezado('CARTOON NETWORK CLASSIFIER', '=');
 
 % Interfaz de usuario
-while true
-    fprintf('\n¿Qué quieres hacer?\n\n');
+while true    fprintf('\n¿Qué quieres hacer?\n\n');
     fprintf('   1. Identificar una SERIE\n');
-    fprintf('   2. Identificar PERSONAJES\n');
-    fprintf('   3. Preparar Carpetas de Test\n');
+    fprintf('   2. Identificar PERSONAJES (No implementado)\n');
+    fprintf('   3. Generar tablas: ENTRADAS y CARACTERISTICAS\n');
     fprintf('   4. Salir\n\n');
 
     while true
@@ -75,8 +67,7 @@ while true
         try
             % Cargar el modelo entrenado
             modelo = cargarModelo(modeloSeriesPath);
-            
-            % Mostrar interfaz de selección
+              % Mostrar interfaz de selección
             seleccionarEntradaSerie(modelo, seriesNames, numBins);
         catch e
             fprintf('\n%s\n', repmat('!', 1, 60));
@@ -84,23 +75,48 @@ while true
             fprintf('%s\n', repmat('!', 1, 60));
         end
     elseif opcion == 2
-        % Identificación de personajes
-        mostrarEncabezado('IDENTIFICACIÓN DE PERSONAJES', '-');
+        % Opción no implementada
+        mostrarEncabezado('FUNCIONALIDAD NO IMPLEMENTADA', '-');        fprintf('\nLa identificación de personajes ha sido removida de esta versión.\n');
+        fprintf('Esta versión se enfoca únicamente en la clasificación de series.\n');
+        fprintf('\nPresiona cualquier tecla para continuar...\n');
+        pause;    elseif opcion == 3
+        % Submenu para generar tablas
+        mostrarEncabezado('GESTIÓN DE DATOS Y CARACTERÍSTICAS', '-');
         
-        try
-            % Cargar el modelo de series
-            modeloSeries = cargarModelo(modeloSeriesPath);
+        while true
+            fprintf('\n¿Qué quieres hacer?\n\n');
+            fprintf('   1. Generar tabla de entradas series\n');
+            fprintf('   2. Generar tabla de características series\n');
+            fprintf('   3. Volver al menú principal\n\n');
             
-            % Mostrar interfaz de selección para personajes
-            seleccionarEntradaPersonaje(modeloSeries, seriesNames, personajesNames, numBins);
-        catch e
-            fprintf('\n%s\n', repmat('!', 1, 60));
-            fprintf('  Error al cargar el modelo de series: %s\n', e.message);
-            fprintf('%s\n', repmat('!', 1, 60));
+            while true
+                try
+                    userInputSub = input('Selecciona opción (1, 2 o 3): ', 's');
+                    opcionSub = str2double(userInputSub);
+                    
+                    % Verificar si el input es un número válido
+                    if isnan(opcionSub) || ~ismember(opcionSub, [1, 2, 3])
+                        mostrarEncabezado('Opción no válida.\nPor favor, selecciona 1, 2 o 3 únicamente.', '-');
+                        continue;
+                    end
+                    break;
+                catch
+                    mostrarEncabezado('Error en la entrada. Inténtalo nuevamente.', '-');
+                end
+            end
+            
+            if opcionSub == 3
+                mostrarEncabezado('Volviendo al menú principal...', '-');
+                break;
+            elseif opcionSub == 1
+                % Generar tabla de entradas series
+                mostrarEncabezado('GENERANDO TABLA DE ENTRADAS SERIES', '-');
+                tabla_entradas_series;
+            elseif opcionSub == 2
+                % Generar tabla de características series
+                mostrarEncabezado('GENERANDO TABLA DE CARACTERÍSTICAS SERIES', '-');
+                tabla_caracteristicas_series;
+            end
         end
-    elseif opcion == 3
-        % Preparación de carpetas de test
-        mostrarEncabezado('PREPARACIÓN DE CARPETAS DE TEST', '-');
-        prepararCarpetasTest(seriesNames);
     end
 end
