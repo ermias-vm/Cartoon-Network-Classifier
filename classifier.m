@@ -35,9 +35,10 @@ seriesNames = {'barrufets','Bob esponja','gat i gos','Gumball', ...
 mostrarEncabezado('CARTOON NETWORK CLASSIFIER', '=');
 
 % Interfaz de usuario
-while true    fprintf('\n¿Qué quieres hacer?\n\n');
+while true
+    fprintf('\n¿Qué quieres hacer?\n\n');
     fprintf('   1. Identificar una SERIE\n');
-    fprintf('   2. Identificar PERSONAJES (No implementado)\n');
+    fprintf('   2. Identificar PERSONAJES\n');
     fprintf('   3. Generar tablas: ENTRADAS y CARACTERISTICAS\n');
     fprintf('   4. Salir\n\n');
 
@@ -66,8 +67,7 @@ while true    fprintf('\n¿Qué quieres hacer?\n\n');
         
         try
             % Cargar el modelo entrenado
-            modelo = cargarModelo(modeloSeriesPath);
-              % Mostrar interfaz de selección
+            modelo = cargarModelo(modeloSeriesPath);            % Mostrar interfaz de selección
             seleccionarEntradaSerie(modelo, seriesNames, numBins);
         catch e
             fprintf('\n%s\n', repmat('!', 1, 60));
@@ -75,28 +75,34 @@ while true    fprintf('\n¿Qué quieres hacer?\n\n');
             fprintf('%s\n', repmat('!', 1, 60));
         end
     elseif opcion == 2
-        % Opción no implementada
-        mostrarEncabezado('FUNCIONALIDAD NO IMPLEMENTADA', '-');        fprintf('\nLa identificación de personajes ha sido removida de esta versión.\n');
-        fprintf('Esta versión se enfoca únicamente en la clasificación de series.\n');
+        % Identificación de personajes
+        mostrarEncabezado('IDENTIFICACIÓN DE PERSONAJES', '-');
+        
+        fprintf('\nEsta funcionalidad identifica personajes usando características HOG.\n');
+        fprintf('Actualmente soporta: Peter Griffin\n\n');
+        fprintf('NOTA: Esta funcionalidad requiere tablas de características HOG.\n');
+        fprintf('Si no existen, genera primero las tablas desde el menú principal.\n');
         fprintf('\nPresiona cualquier tecla para continuar...\n');
-        pause;    elseif opcion == 3
+        pause;
+    elseif opcion == 3
         % Submenu para generar tablas
         mostrarEncabezado('GESTIÓN DE DATOS Y CARACTERÍSTICAS', '-');
-        
-        while true
+          while true
             fprintf('\n¿Qué quieres hacer?\n\n');
             fprintf('   1. Generar tabla de entradas series\n');
             fprintf('   2. Generar tabla de características series\n');
-            fprintf('   3. Volver al menú principal\n\n');
+            fprintf('   3. Generar tabla de entradas personajes\n');
+            fprintf('   4. Generar tabla de características personajes\n');
+            fprintf('   5. Volver al menú principal\n\n');
             
             while true
                 try
-                    userInputSub = input('Selecciona opción (1, 2 o 3): ', 's');
+                    userInputSub = input('Selecciona opción (1, 2, 3, 4 o 5): ', 's');
                     opcionSub = str2double(userInputSub);
                     
                     % Verificar si el input es un número válido
-                    if isnan(opcionSub) || ~ismember(opcionSub, [1, 2, 3])
-                        mostrarEncabezado('Opción no válida.\nPor favor, selecciona 1, 2 o 3 únicamente.', '-');
+                    if isnan(opcionSub) || ~ismember(opcionSub, [1, 2, 3, 4, 5])
+                        mostrarEncabezado('Opción no válida.\nPor favor, selecciona 1, 2, 3, 4 o 5 únicamente.', '-');
                         continue;
                     end
                     break;
@@ -104,8 +110,7 @@ while true    fprintf('\n¿Qué quieres hacer?\n\n');
                     mostrarEncabezado('Error en la entrada. Inténtalo nuevamente.', '-');
                 end
             end
-            
-            if opcionSub == 3
+              if opcionSub == 5
                 mostrarEncabezado('Volviendo al menú principal...', '-');
                 break;
             elseif opcionSub == 1
@@ -116,6 +121,14 @@ while true    fprintf('\n¿Qué quieres hacer?\n\n');
                 % Generar tabla de características series
                 mostrarEncabezado('GENERANDO TABLA DE CARACTERÍSTICAS SERIES', '-');
                 tabla_caracteristicas_series;
+            elseif opcionSub == 3
+                % Generar tabla de entradas personajes
+                mostrarEncabezado('GENERANDO TABLA DE ENTRADAS PERSONAJES', '-');
+                tabla_entradas_personaje;
+            elseif opcionSub == 4
+                % Generar tabla de características personajes
+                mostrarEncabezado('GENERANDO TABLA DE CARACTERÍSTICAS PERSONAJES', '-');
+                tabla_caracteristicas_personaje;
             end
         end
     end

@@ -7,7 +7,7 @@ test/
 
 # Ignore specific files in out directory
 out/*
-out/personajes/*/T_entradas_*.mat
+out/personajes/*/T_entradas*.mat
 out/series/T_entradas*.mat
 
 # Allow these specific files
