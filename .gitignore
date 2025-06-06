@@ -2,7 +2,6 @@ dataset/
 backup/
 *.asv
 .vscode/
-ClassificationLearnerSessions/
 test/
 
 # Ignore specific files in out directory
