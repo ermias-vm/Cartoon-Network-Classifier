@@ -59,15 +59,11 @@ function procesarCarpetaPersonajeConSubcarpetas(carpetaPath, modelo, nombreCarpe
     partesRuta = strsplit(carpetaPath, filesep);
     idxTest = find(strcmp(partesRuta, 'test'), 1);
     idxPersonajes = find(strcmp(partesRuta, 'personajes'), 1);
-    
-    if ~isempty(idxTest) && ~isempty(idxPersonajes) && idxTest < idxPersonajes
+      if ~isempty(idxTest) && ~isempty(idxPersonajes) && idxTest < idxPersonajes
         esDeTest = true;
     end
     
-    % Debug: mostrar información de detección
-    fprintf('DEBUG - Ruta: %s\n', carpetaPath);
-    fprintf('DEBUG - Es de test: %s\n', mat2str(esDeTest));
-      % Crear barra de progreso
+    % Crear barra de progreso
     progressFig = crearBarraProgreso('Progreso de procesamiento personajes');
     
     % Inicializar la tabla para imágenes mal clasificadas
